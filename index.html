@@ -245,7 +245,8 @@
         reqArea.innerHTML = '';
         
         if(me[12] === "Matched") {
-            statusDiv.innerHTML = `<h3 style="color:green;">✅ คุณมีคู่นอนแล้ว (จับคู่กับ UID: ${me[15]})</h3>`;
+            // เปลี่ยนจากเดิมที่เป็น UID มาเป็นชื่อคน จากค่า res.roommateName ที่ backend ส่งมาให้
+            statusDiv.innerHTML = `<h3 style="color:green;">✅ คุณมีคู่นอนแล้ว (จับคู่กับ: ${res.roommateName})</h3>`;
             searchArea.style.display = 'none';
         } else {
             statusDiv.innerHTML = `<h3 style="color:orange;">⏳ คุณยังไม่มีคู่นอน</h3>`;
