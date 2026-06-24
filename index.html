@@ -3,169 +3,345 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ลงทะเบียนสัมมนา & จับคู่นอน</title>
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>ระบบลงทะเบียนสัมมนา</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    
     <style>
-        body { font-family: 'Sarabun', sans-serif; background-color: #f0fdf4; }
-        .card { background: white; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); padding: 2rem; }
-        .input-style { width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem; margin-top: 0.5rem; }
-        .btn-primary { background-color: #10b981; color: white; padding: 0.75rem; border-radius: 0.5rem; width: 100%; font-weight: 600; margin-top: 1rem; }
-        .btn-primary:hover { background-color: #059669; }
+        :root {
+            --primary: #FFB6B9; /* พาสเทลชมพู */
+            --secondary: #FAE3D9;
+            --accent: #BBDED6; /* พาสเทลเขียว */
+            --bg: #FDF6F0;
+            --text: #4A4A4A;
+        }
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 400px;
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        .logo-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .logo {
+            width: 100%;
+            max-height: 120px;
+            /* รักษาอัตราส่วน ไม่ตัดทอนรูปภาพโลโก้ตามคำขอ */
+            object-fit: contain; 
+        }
+        h2 { text-align: center; color: var(--primary); margin-top: 0; }
+        label { font-weight: 500; font-size: 14px; margin-top: 10px; display: block; }
+        input, select, textarea {
+            width: 100%; padding: 10px; margin-top: 5px;
+            border: 2px solid var(--secondary); border-radius: 10px;
+            font-family: 'Sarabun', sans-serif; font-size: 14px;
+            box-sizing: border-box;
+        }
+        input:focus, select:focus { outline: none; border-color: var(--primary); }
+        .btn {
+            width: 100%; padding: 12px; margin-top: 20px;
+            background-color: var(--primary); color: white;
+            border: none; border-radius: 10px; font-weight: 600; font-size: 16px;
+            font-family: 'Sarabun', sans-serif; cursor: pointer; transition: 0.3s;
+        }
+        .btn:hover { background-color: #ff9a9e; }
+        .btn-outline {
+            background-color: transparent; color: var(--primary); border: 2px solid var(--primary);
+        }
+        .hidden { display: none; }
+        .roommate-box {
+            background: var(--secondary); padding: 10px; border-radius: 10px; margin-top: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-4">
+<body>
 
-    <div class="card w-full max-w-md" id="app">
-        <div class="text-center mb-6">
-            <img src="./Logodwr.png" alt="Logo" class="mx-auto h-24 object-contain">
-            <h2 class="text-xl font-bold mt-4 text-gray-800">ลงทะเบียนสัมมนา</h2>
+    <div class="container" id="app">
+        <div class="logo-container">
+            <img src="YOUR_LOGO_URL_HERE" alt="Logo" class="logo">
+        </div>
+        
+        <div id="loadingSec">
+            <h2 style="text-align:center;">กำลังโหลดระบบ...</h2>
         </div>
 
-        <div id="section-verify">
-            <label class="block text-gray-700 font-semibold">หมายเลขบัตรประชาชน</label>
-            <input type="text" id="idCard" class="input-style" placeholder="x-xxxx-xxxxx-xx-x" maxlength="17" oninput="formatIDCard(this)">
+        <div id="verifySec" class="hidden">
+            <h2>ค้นหาข้อมูลลงทะเบียน</h2>
+            <label>ชื่อ (ไม่ต้องใส่คำนำหน้า)</label>
+            <input type="text" id="v_fname" placeholder="ชื่อจริง">
+            <label>หมายเลขบัตรประชาชน</label>
+            <input type="text" id="v_idcard" placeholder="0-0000-00000-00-0" maxlength="17">
+            <button class="btn" onclick="verifyUser()">ค้นหาข้อมูล</button>
+        </div>
+
+        <div id="registerSec" class="hidden">
+            <h2>ข้อมูลการเดินทาง</h2>
+            <p id="profileDisplay" style="font-size:14px; color:gray; text-align:center;"></p>
             
-            <label class="block text-gray-700 font-semibold mt-4">วันเดือนปีเกิด (พ.ศ.)</label>
-            <input type="date" id="dob" class="input-style" onkeydown="return false;">
-            <p class="text-xs text-red-500 mt-1">* กรุณาเลือกจากปฏิทินเท่านั้น</p>
-
-            <button onclick="verifyData()" class="btn-primary">ตรวจสอบข้อมูล</button>
-        </div>
-
-        <div id="section-form" class="hidden">
-            <h3 class="font-bold text-lg text-blue-600 mb-2">ข้อมูลส่วนตัว</h3>
-            <p id="displayUserInfo" class="text-sm bg-blue-50 p-3 rounded mb-4"></p>
-
-            <label class="block text-gray-700 font-semibold">1. ความประสงค์เข้าร่วมกิจกรรม</label>
-            <select id="joinIntent" class="input-style">
+            <label>ประสงค์เข้าร่วมกิจกรรม</label>
+            <select id="r_attend">
                 <option value="Y">เข้าร่วม</option>
                 <option value="N">ไม่เข้าร่วม</option>
             </select>
 
-            <button onclick="submitForm()" class="btn-primary mt-6">บันทึกข้อมูล</button>
+            <label>การเดินทาง (ขาไป)</label>
+            <select id="r_travelOut">
+                <option value="รถยนต์ส่วนบุคคล">รถยนต์ส่วนบุคคล</option>
+                <option value="รถของกรม">ไปกับกรม</option>
+            </select>
+
+            <label>การเดินทาง (ขากลับ)</label>
+            <select id="r_travelIn">
+                <option value="รถยนต์ส่วนบุคคล">รถยนต์ส่วนบุคคล</option>
+                <option value="รถของกรม">กลับกับกรม</option>
+            </select>
+
+            <label>การแพ้อาหาร (หากไม่มีให้ขีด -)</label>
+            <input type="text" id="r_allergy" value="-">
+
+            <label>ข้อมูลอาหาร (ไม่บังคับ)</label>
+            <select id="r_food">
+                <option value="-">ทั่วไป</option>
+                <option value="อิสลาม">อิสลาม</option>
+                <option value="มังสวิรัติ">มังสวิรัติ</option>
+                <option value="อื่นๆ">อื่นๆ (โปรดระบุในหมายเหตุ)</option>
+            </select>
+
+            <label>เบอร์โทรศัพท์มือถือ</label>
+            <input type="tel" id="r_phone">
+
+            <label>ข้อมูลเพิ่มเติม</label>
+            <textarea id="r_note" rows="2"></textarea>
+
+            <button class="btn" onclick="submitData()">บันทึกข้อมูล</button>
         </div>
 
-        <div id="loading" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-xl">
-            <div class="text-white font-bold text-xl">กำลังประมวลผล...</div>
+        <div id="roommateSec" class="hidden">
+            <h2>จับคู่นอน</h2>
+            <div id="pairRequestsList"></div>
+            
+            <label>ค้นหารายชื่อเพื่อจับคู่ (พิมพ์ชื่อ)</label>
+            <input type="text" id="searchRoommate" onkeyup="filterCandidates()" placeholder="ค้นหาชื่อ...">
+            <div id="candidatesList" style="margin-top: 15px;"></div>
+            
+            <p id="notFoundText" class="hidden" style="color:red; font-size:12px; text-align:center; margin-top:10px;">
+                บุคคลที่ท่านกำลังค้นหาอาจยังไม่ลงทะเบียน ไม่เข้าร่วมกิจกรรมนี้ หรือจับคู่นอนไปเรียบร้อยแล้ว
+            </p>
         </div>
     </div>
 
-    <script>
-        // --- ตัวแปรสำคัญ ---
-        const LIFF_ID = "2010492833-vdob7H57"; // ใส่ LIFF ID ของคุณ
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbz4SW3PjipqUdAMCj-IbqJhxTzUPyKq-Qa_5dkserHvu28bIFdFmHmeD5ReDtkjDaqc/exec"; // ใส่ URL Web App ที่ได้จาก Apps Script
-        let userProfile = null;
-        let verifiedData = null;
+<script>
+    // === การตั้งค่า API ===
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbz4SW3PjipqUdAMCj-IbqJhxTzUPyKq-Qa_5dkserHvu28bIFdFmHmeD5ReDtkjDaqc/exec'; // *** เปลี่ยนเป็น URL Web App ของคุณ ***
+    const LIFF_ID = '2010492833-vdob7H57';     // *** เปลี่ยนเป็น LIFF ID ของคุณ ***
 
-        // 1. Initialize LIFF
-        async function main() {
+    let userUID = '';
+    let userProfile = {};
+    let allCandidates = [];
+
+    // Mask ID Card 0-0000-00000-00-0
+    document.getElementById('v_idcard').addEventListener('input', function (e) {
+        let val = e.target.value.replace(/\D/g, '');
+        let formatted = '';
+        for(let i=0; i<val.length; i++){
+            if(i==1 || i==5 || i==10 || i==12) formatted += '-';
+            formatted += val[i];
+        }
+        e.target.value = formatted;
+    });
+
+    async function initializeLiff() {
+        try {
             await liff.init({ liffId: LIFF_ID });
-            if (!liff.isLoggedIn()) {
-                liff.login();
+            if (!liff.isLoggedIn()) { liff.login(); return; }
+            const profile = await liff.getProfile();
+            userUID = profile.userId;
+            checkRegistration();
+        } catch (err) {
+            Swal.fire('Error', 'ไม่สามารถเชื่อมต่อ LINE ได้', 'error');
+        }
+    }
+
+    async function fetchGAS(payload) {
+        const response = await fetch(GAS_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
+        return await response.json();
+    }
+
+    async function checkRegistration() {
+        const res = await fetchGAS({ action: 'checkUID', uid: userUID });
+        document.getElementById('loadingSec').classList.add('hidden');
+        
+        if (res.data.found) {
+            // พบการลงทะเบียน เปิดให้แก้ไข หรือ ไปหน้าจับคู่
+            userProfile.singleRoom = res.data.data[11]; 
+            userProfile.fullName = res.data.data[3];
+            
+            Swal.fire({
+                title: 'พบประวัติการลงทะเบียน',
+                text: 'คุณต้องการแก้ไขข้อมูลหรือจัดการจับคู่นอน?',
+                showCancelButton: true,
+                confirmButtonText: 'แก้ไขข้อมูล',
+                cancelButtonText: 'จัดการจับคู่นอน'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    showSection('registerSec');
+                    // Pre-fill data here if needed
+                } else {
+                    if(userProfile.singleRoom === 'Y') {
+                        Swal.fire('แจ้งเตือน', 'คุณได้รับสิทธิ์นอนเดี่ยว ไม่ต้องทำการจับคู่', 'info');
+                    } else {
+                        loadRoommates();
+                    }
+                }
+            });
+        } else {
+            // ยังไม่ลงทะเบียน
+            Swal.fire('ยังไม่พบข้อมูล', 'กรุณายืนยันตัวตนก่อนลงทะเบียน', 'warning');
+            showSection('verifySec');
+        }
+    }
+
+    async function verifyUser() {
+        const fname = document.getElementById('v_fname').value;
+        const idcard = document.getElementById('v_idcard').value;
+        if(fname === '' || idcard.length !== 17) return Swal.fire('แจ้งเตือน', 'กรุณากรอกข้อมูลให้ครบและถูกต้อง', 'warning');
+
+        Swal.fire({ title: 'กำลังตรวจสอบ...', didOpen: () => { Swal.showLoading() } });
+        const res = await fetchGAS({ action: 'verifyIdentity', idCard: idcard, firstName: fname });
+        
+        if (res.data.match) {
+            userProfile = res.data.profile;
+            userProfile.idCard = idcard;
+            userProfile.fullName = `${userProfile.title}${userProfile.fname} ${userProfile.lname}`;
+            
+            Swal.fire('ตรวจสอบสำเร็จ', `ยินดีต้อนรับ ${userProfile.fullName}`, 'success');
+            document.getElementById('profileDisplay').innerText = `${userProfile.fullName}\nตำแหน่ง: ${userProfile.pos}`;
+            showSection('registerSec');
+        } else {
+            Swal.fire('ข้อผิดพลาด', 'ไม่พบข้อมูลในระบบ หรือกรอกข้อมูลไม่ตรง', 'error');
+        }
+    }
+
+    async function submitData() {
+        const payload = {
+            action: 'register', uid: userUID,
+            idCard: userProfile.idCard, fullName: userProfile.fullName, singleRoom: userProfile.singleRoom,
+            attend: document.getElementById('r_attend').value,
+            travelOut: document.getElementById('r_travelOut').value,
+            travelIn: document.getElementById('r_travelIn').value,
+            allergy: document.getElementById('r_allergy').value,
+            foodPref: document.getElementById('r_food').value,
+            phone: document.getElementById('r_phone').value,
+            note: document.getElementById('r_note').value
+        };
+
+        Swal.fire({ title: 'กำลังบันทึก...', didOpen: () => { Swal.showLoading() } });
+        const res = await fetchGAS(payload);
+        
+        if (res.status === 'success') {
+            if (payload.attend === 'N' || userProfile.singleRoom === 'Y') {
+                Swal.fire('สำเร็จ', 'บันทึกข้อมูลเรียบร้อย', 'success').then(() => liff.closeWindow());
             } else {
-                userProfile = await liff.getProfile();
-                checkRegistration(userProfile.userId);
+                Swal.fire('สำเร็จ', 'บันทึกข้อมูลเรียบร้อย เข้าสู่ขั้นตอนจับคู่นอน', 'success');
+                loadRoommates();
             }
         }
-        main();
+    }
 
-        // 2. เช็คว่าเคยลงทะเบียนไหม
-        function checkRegistration(uid) {
-            Swal.fire({ title: 'กำลังตรวจสอบสถานะ...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
-            
-            fetch(`${GAS_URL}?action=checkUID&uid=${uid}`, { method: 'POST' })
-            .then(res => res.json())
-            .then(data => {
-                Swal.close();
-                if(data.status === 'registered') {
-                    // ถ้าระบบเปิดให้แก้ไขข้อมูล ค่อยจัดการ UI ส่วนแก้ไข
-                    Swal.fire('พบข้อมูล', 'ท่านได้ลงทะเบียนแล้ว (ฟังก์ชันแก้ไขกำลังอยู่ในช่วงพัฒนา)', 'info');
-                } else {
-                    Swal.fire('ยังไม่พบข้อมูล', 'กรุณากรอกข้อมูลบัตรประชาชนและวันเกิดเพื่อตรวจสอบสิทธิ์', 'warning');
-                }
+    async function loadRoommates() {
+        showSection('roommateSec');
+        Swal.fire({ title: 'กำลังโหลดรายชื่อ...', didOpen: () => { Swal.showLoading() } });
+        const res = await fetchGAS({ action: 'getRoommates', uid: userUID });
+        Swal.close();
+
+        // 1. จัดการคำขอที่ถูกส่งมาหาเรา
+        const reqList = document.getElementById('pairRequestsList');
+        reqList.innerHTML = '';
+        if (res.data.requests.length > 0) {
+            reqList.innerHTML = '<h3 style="color:var(--primary);">คำขอจับคู่ถึงคุณ:</h3>';
+            res.data.requests.forEach(req => {
+                reqList.innerHTML += `
+                    <div class="roommate-box">
+                        <span>${req.name}</span>
+                        <button class="btn btn-outline" style="width:auto; margin:0; padding:5px 15px;" onclick="acceptPair('${req.uid}')">ตอบรับ</button>
+                    </div>
+                `;
             });
         }
 
-        // 3. Format บัตรประชาชน (0-0000-00000-00-0)
-        function formatIDCard(input) {
-            let val = input.value.replace(/\D/g, '');
-            let formatted = '';
-            if (val.length > 0) formatted += val.substring(0, 1) + (val.length > 1 ? '-' : '');
-            if (val.length > 1) formatted += val.substring(1, 5) + (val.length > 5 ? '-' : '');
-            if (val.length > 5) formatted += val.substring(5, 10) + (val.length > 10 ? '-' : '');
-            if (val.length > 10) formatted += val.substring(10, 12) + (val.length > 12 ? '-' : '');
-            if (val.length > 12) formatted += val.substring(12, 13);
-            input.value = formatted;
+        // 2. จัดการรายชื่อทั้งหมด
+        allCandidates = res.data.candidates;
+        renderCandidates(allCandidates);
+    }
 
-            // Auto focus ไปช่องถัดไปเมื่อครบ 13 หลัก (17 ตัวอักษรรวมขีด)
-            if(input.value.length === 17) document.getElementById('dob').focus();
-        }
-
-        // 4. ค้นหาข้อมูลจาก Sheet1
-        function verifyData() {
-            const idCard = document.getElementById('idCard').value.replace(/-/g, '');
-            const dob = document.getElementById('dob').value; // จำเป็นต้องแปลง พ.ศ. ตาม format ของตาราง
-
-            if(idCard.length !== 13 || !dob) {
-                return Swal.fire('ผิดพลาด', 'กรุณากรอกข้อมูลให้ครบถ้วน', 'error');
-            }
-
-            Swal.fire({ title: 'กำลังค้นหาฐานข้อมูล...', didOpen: () => { Swal.showLoading() }});
-            
-            fetch(`${GAS_URL}?action=verifyUser&idCard=${idCard}&dob=${dob}`, { method: 'POST' })
-            .then(res => res.json())
-            .then(res => {
-                if(res.status === 'success') {
-                    verifiedData = res.data;
-                    Swal.fire('สำเร็จ', `ยินดีต้อนรับคุณ ${verifiedData.fname} ${verifiedData.lname}`, 'success');
-                    
-                    // แสดงข้อมูล และเปิดฟอร์ม
-                    document.getElementById('displayUserInfo').innerText = `ชื่อ: ${verifiedData.title}${verifiedData.fname} ${verifiedData.lname}\nตำแหน่ง: ${verifiedData.position}\nสังกัด: ${verifiedData.dept}`;
-                    document.getElementById('section-verify').classList.add('hidden');
-                    document.getElementById('section-form').classList.remove('hidden');
-                } else {
-                    Swal.fire('ไม่พบข้อมูล', 'ข้อมูลบัตรประชาชนหรือวันเกิดไม่ตรงกับฐานข้อมูล', 'error');
-                }
+    function renderCandidates(list) {
+        const listDiv = document.getElementById('candidatesList');
+        const notFoundText = document.getElementById('notFoundText');
+        listDiv.innerHTML = '';
+        
+        if (list.length === 0) {
+            notFoundText.classList.remove('hidden');
+        } else {
+            notFoundText.classList.add('hidden');
+            list.forEach(person => {
+                listDiv.innerHTML += `
+                    <div class="roommate-box">
+                        <span style="font-size:14px;">${person.name}</span>
+                        <button class="btn" style="width:auto; margin:0; padding:5px 10px;" onclick="requestPair('${person.uid}')">ขอจับคู่</button>
+                    </div>
+                `;
             });
         }
+    }
 
-        // 5. บันทึกข้อมูล
-        function submitForm() {
-            const payload = {
-                uid: userProfile.userId,
-                idCard: verifiedData.idCard,
-                dob: verifiedData.dob,
-                title: verifiedData.title,
-                fname: verifiedData.fname,
-                lname: verifiedData.lname,
-                position: verifiedData.position,
-                dept: verifiedData.dept,
-                singleRoom: verifiedData.singleRoom,
-                join: document.getElementById('joinIntent').value,
-                // ดึงค่าอื่นๆ จากฟอร์มมาใส่...
-            };
+    function filterCandidates() {
+        const text = document.getElementById('searchRoommate').value.toLowerCase();
+        const filtered = allCandidates.filter(c => c.name.toLowerCase().includes(text));
+        renderCandidates(filtered);
+    }
 
-            Swal.fire({ title: 'กำลังบันทึก...', didOpen: () => { Swal.showLoading() }});
-            fetch(`${GAS_URL}?action=register&data=${encodeURIComponent(JSON.stringify(payload))}`, { method: 'POST' })
-            .then(res => res.json())
-            .then(res => {
-                if(res.status === 'success') {
-                    Swal.fire('สำเร็จ', 'บันทึกข้อมูลเรียบร้อยแล้ว', 'success').then(() => {
-                        // เช็คสิทธิ์การนอนเดียว แล้วนำไปสู่หน้าจับคู่...
-                        if(verifiedData.singleRoom === 'N') {
-                            Swal.fire('ขั้นตอนต่อไป', 'กรุณาเลือกเพื่อนร่วมห้อง', 'info');
-                            // ทำการ Redirect หรือโชว์หน้า UI ค้นหารายชื่อจับคู่
-                        } else {
-                            liff.closeWindow();
-                        }
-                    });
-                }
-            });
-        }
-    </script>
+    async function requestPair(targetUid) {
+        const res = await fetchGAS({ action: 'requestPair', fromUid: userUID, fromName: userProfile.fullName, toUid: targetUid });
+        if(res.status === 'success') Swal.fire('สำเร็จ', 'ส่งคำขอจับคู่แล้ว รอการตอบรับ', 'success');
+    }
+
+    async function acceptPair(requesterUid) {
+        const res = await fetchGAS({ action: 'acceptPair', myUid: userUID, requesterUid: requesterUid });
+        if(res.status === 'success') Swal.fire('สำเร็จ', `คุณจับคู่กับ ${res.data.partner} เรียบร้อยแล้ว`, 'success').then(() => liff.closeWindow());
+    }
+
+    function showSection(id) {
+        document.getElementById('loadingSec').classList.add('hidden');
+        document.getElementById('verifySec').classList.add('hidden');
+        document.getElementById('registerSec').classList.add('hidden');
+        document.getElementById('roommateSec').classList.add('hidden');
+        document.getElementById(id).classList.remove('hidden');
+    }
+
+    // Start App
+    // หากทดสอบบนคอมพิวเตอร์ที่ไม่มี LIFF ให้ปิดบรรทัด initializeLiff() ไว้ชั่วคราวแล้วจำลอง userUID เอาเอง
+    window.onload = initializeLiff; 
+</script>
+
 </body>
 </html>
