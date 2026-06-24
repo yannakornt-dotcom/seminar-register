@@ -1,267 +1,308 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ลงทะเบียนสัมมนา - กรมทรัพยากรน้ำ</title>
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-    <style>
-        :root { --primary: #0077b6; --secondary: #00b4d8; --light: #caf0f8; --white: #ffffff; }
-        body { font-family: 'Sarabun', sans-serif; background: linear-gradient(135deg, var(--light) 0%, #e0fbfc 100%); margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-        .container { width: 90%; max-width: 500px; background: var(--white); border-radius: 20px; box-shadow: 0 10px 20px rgba(0, 119, 182, 0.1); padding: 30px 20px; margin: 20px 0; position: relative; }
-        .container::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 5px; background: linear-gradient(90deg, var(--primary), var(--secondary)); }
-        .header { text-align: center; margin-bottom: 20px; }
-        .logo { width: 150px; height: auto; object-fit: contain; margin-bottom: 15px; }
-        .title { color: var(--primary); font-weight: 600; font-size: 1.2rem; margin: 0; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; color: var(--primary); font-weight: 600; font-size: 0.95rem; }
-        input[type="text"], input[type="tel"], select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-family: 'Sarabun', sans-serif; box-sizing: border-box; }
-        .btn { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 10px; }
-        .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
-        .btn-danger { background: #e63946; }
-        .hidden { display: none; }
-        .card { background: #f1f9f9; border-left: 4px solid var(--secondary); padding: 10px; margin-bottom: 10px; border-radius: 4px; }
-        .refresh-btn { float: right; font-size: 0.8rem; padding: 5px 10px; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ลงทะเบียนสัมมนา กรมทรัพยากรน้ำ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    body { font-family: 'Sarabun', sans-serif; background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); min-height: 100vh; }
+    .glass-panel { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border-radius: 1.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+    
+    /* การแสดงผลโลโก้ห้ามตัดทอนตามคำสั่งของผู้ใช้ */
+    .logo-img { width: 100%; max-width: 250px; height: auto; object-fit: contain; margin: 0 auto; display: block; }
+    
+    /* Water Drop Loader */
+    .loader-container { display: flex; justify-content: center; align-items: center; height: 100px; }
+    .water-drop {
+      width: 40px; height: 40px; background: #0ea5e9;
+      border-radius: 0 50% 50% 50%;
+      transform: rotate(45deg);
+      animation: dropBounce 1s infinite alternate cubic-bezier(0.5, 0.05, 1, 0.5);
+      box-shadow: inset -5px -5px 10px rgba(0,0,0,0.1);
+    }
+    @keyframes dropBounce {
+      0% { transform: rotate(45deg) translate(0, 0) scale(1); }
+      100% { transform: rotate(45deg) translate(-20px, -20px) scale(0.9); background: #38bdf8; }
+    }
+  </style>
 </head>
-<body>
+<body class="p-4 text-gray-800">
 
-<div class="container">
-    <div class="header">
-        <img src="https://dwr.go.th/uploads/userfiles/images/Logodwr.png" alt="DWR Logo" class="logo">
-        <h1 class="title">ระบบลงทะเบียนและจัดการห้องพัก</h1>
+<div id="app" class="max-w-md mx-auto glass-panel p-6 mt-4">
+  <div class="text-center mb-6">
+    <img src="https://dwr.go.th/uploads/userfiles/images/Logodwr.png" alt="DWR Logo" class="logo-img drop-shadow-sm mb-3">
+    <h2 class="text-xl font-semibold text-sky-800">ระบบลงทะเบียนสัมมนาและจัดการห้องพัก</h2>
+  </div>
+
+  <div v-if="isLoading" class="text-center py-8">
+    <div class="loader-container"><div class="water-drop"></div></div>
+    <p class="text-sky-600 mt-4 animate-pulse">{{ loadingText }}</p>
+  </div>
+
+  <div v-if="!isLoading && currentStep === 'check'" class="space-y-4">
+    <p class="text-sm text-center text-gray-600">กรุณากรอกหมายเลขบัตรประชาชน 13 หลัก</p>
+    <input type="text" v-model="nidInput" @input="formatNid" placeholder="0-0000-00000-00-0" class="w-full text-center text-lg p-3 border border-sky-300 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none">
+    <button @click="verifyUser" class="w-full bg-sky-600 text-white font-semibold py-3 rounded-xl hover:bg-sky-700 transition shadow-lg shadow-sky-200">ตรวจสอบข้อมูล</button>
+  </div>
+
+  <div v-if="!isLoading && currentStep === 'register'" class="space-y-4">
+    <div class="bg-sky-50 p-4 rounded-xl text-sm mb-4 border border-sky-100">
+      <p><strong>ชื่อ-สกุล:</strong> {{ userData.Prefix }}{{ userData.FName }} {{ userData.LName }}</p>
+      <p><strong>ตำแหน่ง:</strong> {{ userData.Position }}</p>
+      <p><strong>สังกัด:</strong> {{ userData.Department }}</p>
     </div>
 
-    <div id="loadingSec" style="text-align: center; color: var(--primary);">
-        <p>กำลังโหลดข้อมูล...</p>
+    <div>
+      <label class="block text-sm font-semibold mb-1">ความประสงค์เข้าร่วมกิจกรรม</label>
+      <select v-model="form.JoinStatus" class="w-full p-2 border border-gray-300 rounded-lg bg-white">
+        <option value="">-- กรุณาเลือก --</option>
+        <option value="เข้าร่วม">เข้าร่วม</option>
+        <option value="ไม่เข้าร่วม">ไม่เข้าร่วม</option>
+      </select>
     </div>
 
-    <div id="searchSec" class="hidden">
-        <div class="form-group">
-            <label>กรุณากรอกหมายเลขบัตรประชาชน 13 หลัก</label>
-            <input type="text" id="idCard" placeholder="0-0000-00000-00-0" oninput="formatID(this)" maxlength="17">
+    <template v-if="form.JoinStatus === 'เข้าร่วม'">
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="block text-sm font-semibold mb-1">การเดินทาง (ขาไป)</label>
+          <select v-model="form.TravelGo" class="w-full p-2 border border-gray-300 rounded-lg bg-white">
+            <option value="">เลือก</option>
+            <option value="รถยนต์ส่วนตัว">รถยนต์ส่วนตัว</option>
+            <option value="รถกรมฯ">รถกรมฯจัดหา</option>
+          </select>
         </div>
-        <button class="btn" onclick="searchID()">ค้นหาข้อมูล</button>
-    </div>
-
-    <div id="regSec" class="hidden">
-        <div id="profileBox" class="card"></div>
-        <form id="regForm">
-            <div class="form-group">
-                <label>ความประสงค์เข้าร่วม</label>
-                <select id="attend" required onchange="toggleForm()">
-                    <option value="">-- เลือก --</option>
-                    <option value="Y">เข้าร่วม</option>
-                    <option value="N">ไม่เข้าร่วม</option>
-                </select>
-            </div>
-            <div id="extraForm" class="hidden">
-                <div class="form-group"><label>เดินทาง (ขาไป)</label><select id="tGo"><option value="">-- เลือก --</option><option value="รถส่วนตัว">รถส่วนบุคคล</option><option value="รถกรม">รถกรมจัดหาให้</option></select></div>
-                <div class="form-group"><label>เดินทาง (ขากลับ)</label><select id="tRet"><option value="">-- เลือก --</option><option value="รถส่วนตัว">รถส่วนบุคคล</option><option value="รถกรม">รถกรมจัดหาให้</option></select></div>
-                <div class="form-group"><label>แพ้อาหาร</label><select id="allergy" onchange="document.getElementById('allergyDetail').classList.toggle('hidden', this.value!=='Y')"><option value="N">ไม่แพ้</option><option value="Y">แพ้</option></select></div>
-                <input type="text" id="allergyDetail" class="hidden form-group" placeholder="ระบุอาหารที่แพ้">
-                <div class="form-group"><label>ประเภทอาหาร</label><select id="food" onchange="document.getElementById('foodDetail').classList.toggle('hidden', this.value!=='อื่นๆ')"><option value="ทั่วไป">ทานได้ทุกอย่าง</option><option value="อิสลาม">อิสลาม</option><option value="มังสวิรัติ">มังสวิรัติ</option><option value="อื่นๆ">อื่นๆ</option></select></div>
-                <input type="text" id="foodDetail" class="hidden form-group" placeholder="ระบุเพิ่มเติม">
-                <div class="form-group"><label>เบอร์โทรศัพท์</label><input type="tel" id="phone" required></div>
-                <div class="form-group"><label>ข้อมูลเพิ่มเติม (ไม่บังคับ)</label><textarea id="extra"></textarea></div>
-            </div>
-            <button type="button" class="btn" onclick="saveData()">บันทึกข้อมูล</button>
-            <button type="button" class="btn btn-outline hidden" id="btnGoMatch" onclick="loadMatchData()">จัดการห้องพัก</button>
-        </form>
-    </div>
-
-    <div id="matchSec" class="hidden">
-        <button class="btn btn-outline refresh-btn" onclick="loadMatchData()">🔄 รีเฟรชข้อมูล</button>
-        <h3 class="title" style="margin-bottom: 15px;">ระบบจัดห้องพัก</h3>
-        
-        <div id="matchStatusBox" class="card"></div>
-
-        <div id="matchActionBox">
-            <hr>
-            <div class="form-group">
-                <label>ค้นหารายชื่อเพื่อขอจับคู่</label>
-                <select id="userList" style="margin-bottom:10px;"><option value="">-- เลือกรายชื่อ --</option></select>
-                <button class="btn" onclick="sendRequest()">ส่งคำขอจับคู่</button>
-            </div>
-            
-            <div id="reqReceivedBox" style="margin-top: 20px;">
-                <label>คำขอจับคู่ที่ได้รับ</label>
-                <div id="reqReceivedList">ไม่มีคำขอ</div>
-            </div>
-
-            <div id="reqSentBox" style="margin-top: 20px;">
-                <label>คำขอที่ส่งไป (รอการตอบรับ)</label>
-                <div id="reqSentList">ไม่มีรายการ</div>
-            </div>
+        <div>
+          <label class="block text-sm font-semibold mb-1">การเดินทาง (ขากลับ)</label>
+          <select v-model="form.TravelReturn" class="w-full p-2 border border-gray-300 rounded-lg bg-white">
+            <option value="">เลือก</option>
+            <option value="รถยนต์ส่วนตัว">รถยนต์ส่วนตัว</option>
+            <option value="รถกรมฯ">รถกรมฯจัดหา</option>
+          </select>
         </div>
-        <button class="btn btn-outline" style="margin-top:20px;" onclick="showSec('regSec')">ย้อนกลับไปแก้ไขข้อมูล</button>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold mb-1">การแพ้อาหาร</label>
+        <select v-model="allergySelect" class="w-full p-2 border border-gray-300 rounded-lg bg-white mb-2">
+          <option value="ไม่แพ้">ไม่แพ้</option>
+          <option value="แพ้">แพ้ (ระบุ)</option>
+        </select>
+        <input v-if="allergySelect === 'แพ้'" type="text" v-model="form.Allergy" placeholder="ระบุอาหารที่แพ้" class="w-full p-2 border border-gray-300 rounded-lg">
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold mb-1">ประเภทอาหาร</label>
+        <select v-model="foodSelect" class="w-full p-2 border border-gray-300 rounded-lg bg-white mb-2">
+          <option value="">เลือก</option>
+          <option value="ทานได้ทุกอย่าง">ทานได้ทุกอย่าง</option>
+          <option value="อิสลาม">อิสลาม</option>
+          <option value="มังสวิรัติ">มังสวิรัติ</option>
+          <option value="อื่นๆ">อื่น ๆ (ระบุ)</option>
+        </select>
+        <input v-if="foodSelect === 'อื่นๆ'" type="text" v-model="form.FoodType" placeholder="ระบุประเภทอาหาร" class="w-full p-2 border border-gray-300 rounded-lg">
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold mb-1">หมายเลขโทรศัพท์</label>
+        <input type="tel" v-model="form.Mobile" maxlength="10" class="w-full p-2 border border-gray-300 rounded-lg">
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold mb-1">ข้อมูลเพิ่มเติม (ถ้ามี)</label>
+        <textarea v-model="form.Extra" class="w-full p-2 border border-gray-300 rounded-lg" rows="2"></textarea>
+      </div>
+    </template>
+
+    <button @click="submitRegister" class="w-full bg-sky-600 text-white font-semibold py-3 rounded-xl mt-4 hover:bg-sky-700 shadow-md">บันทึกข้อมูล</button>
+  </div>
+
+  <div v-if="!isLoading && currentStep === 'roommate'" class="space-y-4">
+    <div class="text-center mb-4 pb-2 border-b border-sky-100">
+      <h3 class="font-bold text-sky-800 text-lg">การจัดการห้องพัก</h3>
     </div>
+
+    <div v-if="roomData.status === 'single_room'" class="text-center text-green-600 p-4 bg-green-50 rounded-xl">
+      ท่านได้รับสิทธิ์การพักเดี่ยว (Single Room) ไม่จำเป็นต้องจับคู่นอน
+    </div>
+
+    <div v-else-if="roomData.myMatch" class="text-center p-4 bg-sky-100 border border-sky-200 rounded-xl">
+      <p class="text-sm text-gray-600">คู่ห้องพักของท่านคือ</p>
+      <p class="font-bold text-sky-800 text-lg mt-1">{{ roomData.myMatch.name }}</p>
+    </div>
+
+    <div v-else>
+      <div v-if="roomData.myPending.length > 0" class="mb-4">
+        <h4 class="font-semibold text-sm text-orange-600 mb-2">คำขอจับคู่ถึงคุณ</h4>
+        <div v-for="req in roomData.myPending" :key="req.uid" class="flex justify-between items-center bg-orange-50 p-3 rounded-lg border border-orange-100 mb-2">
+          <span class="text-sm font-medium">{{ req.name }}</span>
+          <div class="flex gap-2">
+            <button @click="respondRoom(req.uid, 'Matched')" class="bg-green-500 text-white px-3 py-1 rounded text-xs shadow">ตอบรับ</button>
+            <button @click="respondRoom(req.uid, 'Cancelled')" class="bg-red-500 text-white px-3 py-1 rounded text-xs shadow">ปฏิเสธ</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="relative">
+        <input type="text" v-model="searchRoommate" placeholder="ค้นหาชื่อ-สกุล เพื่อจับคู่..." class="w-full p-3 border border-sky-200 rounded-xl outline-none focus:border-sky-500">
+        <div v-if="searchRoommate && filteredUsers.length > 0" class="absolute w-full bg-white border border-gray-200 mt-1 max-h-48 overflow-y-auto rounded-xl shadow-xl z-10">
+          <div v-for="user in filteredUsers" :key="user.uid" class="p-3 border-b border-gray-100 flex justify-between items-center hover:bg-sky-50">
+            <div>
+              <p class="text-sm font-semibold">{{ user.name }}</p>
+              <p class="text-xs text-gray-500">{{ user.dept }}</p>
+            </div>
+            <button v-if="!isRequested(user.uid)" @click="requestRoom(user.uid)" class="text-xs bg-sky-100 text-sky-700 px-3 py-1 rounded-full font-semibold">ส่งคำขอ</button>
+            <span v-else class="text-xs text-gray-400 bg-gray-100 px-3 py-1 rounded-full">รอตอบรับ</span>
+          </div>
+        </div>
+        <p v-if="searchRoommate && filteredUsers.length === 0" class="text-xs text-red-500 mt-2">
+          ไม่พบรายชื่อ บุคคลนี้อาจยังไม่ลงทะเบียน ไม่เข้าร่วม หรือมีคู่แล้ว
+        </p>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbz4SW3PjipqUdAMCj-IbqJhxTzUPyKq-Qa_5dkserHvu28bIFdFmHmeD5ReDtkjDaqc/exec";
-    let myUID = "U_TEST_12345"; // ค่าเริ่มต้นสำหรับเทส หากเชื่อม LIFF ค่านี้จะถูกแทนที่
-    let myProfileData = {};
+  // แทนที่ URL นี้ด้วย Web App URL ของ GAS
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbz4SW3PjipqUdAMCj-IbqJhxTzUPyKq-Qa_5dkserHvu28bIFdFmHmeD5ReDtkjDaqc/exec"; 
 
-    // 1. เริ่มต้นระบบ (สลับใช้บรรทัดล่างเมื่อมี LIFF ID)
-    async function init() {
-         await liff.init({ liffId: "2010492833-vdob7H57" });
-         if (liff.isLoggedIn()) { myUID = (await liff.getProfile()).userId; }
+  const { createApp } = Vue;
+
+  createApp({
+    data() {
+      return {
+        isLoading: true, loadingText: "กำลังเชื่อมต่อระบบ...", currentStep: "check",
+        lineProfile: { userId: "" },
+        nidInput: "",
+        userData: {},
+        form: { JoinStatus: "", TravelGo: "", TravelReturn: "", Allergy: "", FoodType: "", Mobile: "", Extra: "", NID: "" },
+        allergySelect: "ไม่แพ้", foodSelect: "",
+        roomData: { status: "", available: [], myRequests: [], myPending: [], myMatch: null },
+        searchRoommate: "",
+        pollingInterval: null
+      };
+    },
+    computed: {
+      filteredUsers() {
+        if (!this.searchRoommate) return [];
+        return this.roomData.available.filter(u => u.name.includes(this.searchRoommate));
+      }
+    },
+    async mounted() {
+      // Mockup สำหรับรันนอก LINE นำ LIFF init ของจริงมาใส่เมื่อใช้จริง
+       await liff.init({ liffId: "2010492833-vdob7H57" }); 
+      // if (liff.isLoggedIn()) { const profile = await liff.getProfile(); this.lineProfile.userId = profile.userId; } 
+      
+      this.lineProfile.userId = "U1234567890"; // Mock Line UID
+      this.initialCheck();
+    },
+    beforeUnmount() {
+      if (this.pollingInterval) clearInterval(this.pollingInterval);
+    },
+    methods: {
+      formatNid() {
+        let val = this.nidInput.replace(/\D/g, '');
+        if (val.length > 13) val = val.substring(0, 13);
+        let formatted = '';
+        for (let i = 0; i < val.length; i++) {
+          if (i === 1 || i === 5 || i === 10 || i === 12) formatted += '-';
+          formatted += val[i];
+        }
+        this.nidInput = formatted;
+      },
+      async apiCall(action, payload = {}) {
+        const response = await fetch(GAS_URL, {
+          method: "POST", body: JSON.stringify({ action, lineUid: this.lineProfile.userId, ...payload })
+        });
+        return await response.json();
+      },
+      async initialCheck() {
+        try {
+          const res = await this.apiCall("checkUser");
+          if (res.status === "registered" || res.status === "found_db") {
+            this.mapData(res.data, res.status);
+            this.currentStep = "register";
+          } else {
+            this.currentStep = "check";
+          }
+        } catch (e) {
+          Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error');
+        } finally {
+          this.isLoading = false;
+        }
+      },
+      async verifyUser() {
+        if (this.nidInput.length !== 17) return Swal.fire('แจ้งเตือน', 'กรุณากรอกเลขบัตร 13 หลักให้ครบถ้วน', 'warning');
+        this.isLoading = true; this.loadingText = "กำลังค้นหาข้อมูล...";
+        const res = await this.apiCall("checkUser", { nid: this.nidInput });
+        this.isLoading = false;
         
-        fetchGAS({ action: "checkUser", uid: myUID }, res => {
-            if (res.status === "found") {
-                myProfileData = { prefix: res.data[3], name: res.data[4], surname: res.data[5], idCard: res.data[2] };
-                fillForm(res.data);
-                showSec('regSec');
-                Swal.fire({icon: 'success', title: 'พบข้อมูลการลงทะเบียน', timer: 1500, showConfirmButton: false});
-            } else {
-                showSec('searchSec');
-            }
-        });
+        if (res.status === "found_db") {
+          this.mapData(res.data, res.status);
+          this.currentStep = "register";
+        } else {
+          Swal.fire('ไม่พบข้อมูล', 'ไม่พบรายชื่อของท่านในระบบ กรุณาติดต่อเจ้าหน้าที่', 'error');
+        }
+      },
+      mapData(data, source) {
+        if (source === "found_db") {
+          this.userData = { NID: data[0], Prefix: data[2], FName: data[3], LName: data[4], Position: data[5], Department: data[6] };
+          this.form.NID = data[0];
+        } else {
+          // Map registered data logic here
+          this.form.NID = data[1]; this.form.JoinStatus = data[3];
+        }
+      },
+      async submitRegister() {
+        if (!this.form.JoinStatus) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกความประสงค์', 'warning');
+        if (this.foodSelect !== 'อื่นๆ') this.form.FoodType = this.foodSelect;
+        if (this.allergySelect !== 'แพ้') this.form.Allergy = "ไม่แพ้";
+
+        this.isLoading = true; this.loadingText = "กำลังบันทึกข้อมูล...";
+        const res = await this.apiCall("registerUser", { payload: this.form });
+        this.isLoading = false;
+
+        if (res.status === "success") {
+          Swal.fire('สำเร็จ', 'บันทึกข้อมูลเรียบร้อย', 'success');
+          if (this.form.JoinStatus === 'เข้าร่วม') {
+            this.currentStep = "roommate";
+            this.startRoommateSync();
+          } else {
+            liff.closeWindow();
+          }
+        } else {
+          Swal.fire('ข้อผิดพลาด', res.message || 'เกิดข้อผิดพลาด', 'error');
+        }
+      },
+      startRoommateSync() {
+        this.fetchRoommates();
+        this.pollingInterval = setInterval(this.fetchRoommates, 5000); // Realtime Sync ทุก 5 วินาที
+      },
+      async fetchRoommates() {
+        const res = await this.apiCall("getRoommates");
+        if (res.status === "success" || res.status === "single_room") {
+          this.roomData = res;
+        }
+      },
+      isRequested(uid) {
+        return this.roomData.myRequests.some(r => r.uid === uid);
+      },
+      async requestRoom(targetUid) {
+        await this.apiCall("requestRoom", { reqUid: this.lineProfile.userId, targetUid });
+        this.fetchRoommates();
+      },
+      async respondRoom(reqUid, action) {
+        await this.apiCall("respondRoom", { myUid: this.lineProfile.userId, reqUid, action });
+        this.fetchRoommates();
+      }
     }
-
-    // 2. ค้นหาบัตร
-    function searchID() {
-        let idCard = document.getElementById("idCard").value;
-        if(idCard.length < 17) return Swal.fire('แจ้งเตือน', 'กรอกบัตรประชาชนให้ครบถ้วน', 'warning');
-        
-        Swal.fire({title: 'กำลังตรวจสอบ...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
-        fetchGAS({ action: "searchID", uid: myUID, idCard: idCard }, res => {
-            if (res.status === "success") {
-                myProfileData = { prefix: res.profile[2], name: res.profile[3], surname: res.profile[4], idCard: idCard };
-                document.getElementById("profileBox").innerHTML = `<b>ข้อมูล:</b> ${res.profile[2]}${res.profile[3]} ${res.profile[4]}<br><b>สังกัด:</b> ${res.profile[6]}`;
-                showSec('regSec');
-                Swal.close();
-            } else {
-                Swal.fire('ไม่พบข้อมูล', res.message, 'error');
-            }
-        });
-    }
-
-    // 3. บันทึกฟอร์ม
-    function saveData() {
-        const payload = {
-            uid: myUID, idCard: myProfileData.idCard,
-            prefix: myProfileData.prefix, name: myProfileData.name, surname: myProfileData.surname,
-            attend: document.getElementById("attend").value,
-            travelGo: document.getElementById("tGo").value,
-            travelReturn: document.getElementById("tRet").value,
-            allergy: document.getElementById("allergy").value, allergyDetail: document.getElementById("allergyDetail").value,
-            foodType: document.getElementById("food").value, foodDetail: document.getElementById("foodDetail").value,
-            phone: document.getElementById("phone").value, extra: document.getElementById("extra").value
-        };
-        
-        if (payload.attend === "Y" && !payload.phone) return Swal.fire('แจ้งเตือน', 'กรุณากรอกเบอร์โทรศัพท์', 'warning');
-
-        Swal.fire({title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
-        fetchGAS({ action: "saveRegister", payload: payload }, res => {
-            if(res.status === "success") {
-                Swal.fire('สำเร็จ', 'บันทึกข้อมูลเรียบร้อย', 'success');
-                if(payload.attend === "Y") document.getElementById("btnGoMatch").classList.remove("hidden");
-                else document.getElementById("btnGoMatch").classList.add("hidden");
-            }
-        });
-    }
-
-    // 4. โหลดระบบจับคู่
-    function loadMatchData() {
-        showSec('matchSec');
-        Swal.fire({title: 'อัปเดตข้อมูล...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
-        
-        fetchGAS({ action: "getMatchData", uid: myUID }, res => {
-            Swal.close();
-            if (res.status === "not_eligible") {
-                document.getElementById("matchStatusBox").innerHTML = "<p style='color:red;'>ท่านไม่มีสิทธิ์ใช้ระบบจับคู่ (เลือกไม่เข้าร่วม หรือ มีสิทธิ์นอนเดี่ยว)</p>";
-                document.getElementById("matchActionBox").style.display = "none";
-                return;
-            }
-
-            document.getElementById("matchActionBox").style.display = res.profile.matchStatus === "Matched" ? "none" : "block";
-            
-            if (res.profile.matchStatus === "Matched") {
-                document.getElementById("matchStatusBox").innerHTML = `<h3 style='color:green;'>✅ จับคู่สำเร็จ</h3><p>คุณพักคู่กับ: <b>${res.partnerName}</b></p><button class="btn btn-danger" onclick="cancelMatch()">ยกเลิกการจับคู่นี้</button>`;
-            } else {
-                document.getElementById("matchStatusBox").innerHTML = "<p>สถานะ: <b>ยังไม่มีคู่</b></p>";
-                
-                // อัปเดต Dropdown
-                let userList = `<option value="">-- เลือกรายชื่อ --</option>`;
-                if(res.availableUsers.length === 0) userList += `<option value="" disabled>ไม่มีผู้ที่สามารถจับคู่ได้ (อาจยังไม่ลงทะเบียนหรือมีคู่แล้ว)</option>`;
-                res.availableUsers.forEach(u => { userList += `<option value="${u.uid}">${u.name}</option>`; });
-                document.getElementById("userList").innerHTML = userList;
-
-                // อัปเดตคำขอที่ได้รับ
-                let rReq = "";
-                res.requestsReceived.forEach(req => {
-                    rReq += `<div class="card">${req.name} <button class="btn" style="padding:5px; margin-top:5px; background:green;" onclick="respondReq('${req.fromUID}', 'Accept')">ตอบรับ</button> <button class="btn btn-danger" style="padding:5px; margin-top:5px;" onclick="respondReq('${req.fromUID}', 'Reject')">ปฏิเสธ</button></div>`;
-                });
-                document.getElementById("reqReceivedList").innerHTML = rReq || "ไม่มีคำขอ";
-
-                // อัปเดตคำขอที่ส่งไป
-                let sReq = "";
-                res.myRequestsSent.forEach(req => { sReq += `<div class="card">รอการตอบรับจาก: ${req.name}</div>`; });
-                document.getElementById("reqSentList").innerHTML = sReq || "ไม่มีรายการ";
-            }
-        });
-    }
-
-    function sendRequest() {
-        const toUID = document.getElementById("userList").value;
-        if (!toUID) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกรายชื่อ', 'warning');
-        
-        Swal.fire({title: 'กำลังส่งคำขอ...', didOpen: () => { Swal.showLoading() }});
-        fetchGAS({ action: "sendRequest", fromUID: myUID, toUID: toUID }, res => {
-            if(res.status === "success") { Swal.fire('สำเร็จ', 'ส่งคำขอแล้ว รอการตอบรับ', 'success'); loadMatchData(); }
-        });
-    }
-
-    function respondReq(fromUID, response) {
-        Swal.fire({title: 'กำลังดำเนินการ...', didOpen: () => { Swal.showLoading() }});
-        fetchGAS({ action: "respondRequest", uid: myUID, fromUID: fromUID, response: response }, res => {
-            if(res.status === "success") { Swal.fire('สำเร็จ', 'บันทึกการตัดสินใจแล้ว', 'success'); loadMatchData(); }
-        });
-    }
-
-    function cancelMatch() {
-        Swal.fire({ title: 'ยืนยันการยกเลิก?', text: "หากยกเลิก คุณต้องหาคู่ใหม่", icon: 'warning', showCancelButton: true }).then((result) => {
-            if (result.isConfirmed) {
-                Swal.fire({title: 'กำลังยกเลิก...', didOpen: () => { Swal.showLoading() }});
-                fetchGAS({ action: "cancelMatch", uid: myUID }, res => {
-                    if(res.status === "success") { Swal.fire('สำเร็จ', 'ยกเลิกการจับคู่แล้ว', 'success'); loadMatchData(); }
-                });
-            }
-        });
-    }
-
-    // Utils
-    function fetchGAS(data, callback) {
-        fetch(GAS_URL, { method: "POST", body: JSON.stringify(data) })
-        .then(r => r.json()).then(callback).catch(e => { Swal.fire('ข้อผิดพลาด', 'เชื่อมต่อระบบล้มเหลว', 'error'); });
-    }
-    function formatID(obj) {
-        let val = obj.value.replace(/\D/g, ''); let f = '';
-        if (val.length > 0) f += val.substring(0, 1) + (val.length > 1 ? '-' : '');
-        if (val.length > 1) f += val.substring(1, 5) + (val.length > 5 ? '-' : '');
-        if (val.length > 5) f += val.substring(5, 10) + (val.length > 10 ? '-' : '');
-        if (val.length > 10) f += val.substring(10, 12) + (val.length > 12 ? '-' : '');
-        if (val.length > 12) f += val.substring(12, 13);
-        obj.value = f;
-    }
-    function showSec(id) { ['loadingSec','searchSec','regSec','matchSec'].forEach(s => document.getElementById(s).classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
-    function toggleForm() { document.getElementById("extraForm").classList.toggle("hidden", document.getElementById("attend").value !== "Y"); }
-    function fillForm(data) {
-        document.getElementById("profileBox").innerHTML = `<b>ข้อมูล:</b> ${data[3]}${data[4]} ${data[5]}`;
-        document.getElementById("attend").value = data[6]; toggleForm();
-        document.getElementById("tGo").value = data[7]; document.getElementById("tRet").value = data[8];
-        document.getElementById("allergy").value = data[9]; if(data[9]==='Y') document.getElementById('allergyDetail').classList.remove('hidden'); document.getElementById("allergyDetail").value = data[10];
-        document.getElementById("food").value = data[11]; if(data[11]==='อื่นๆ') document.getElementById('foodDetail').classList.remove('hidden'); document.getElementById("foodDetail").value = data[12];
-        document.getElementById("phone").value = data[13].replace("'", ""); // ตัด ' ออกเวลาแสดงผล
-        document.getElementById("extra").value = data[14];
-        if(data[6]==="Y") document.getElementById("btnGoMatch").classList.remove("hidden");
-    }
-
-    window.onload = init;
+  }).mount('#app');
 </script>
 </body>
 </html>
