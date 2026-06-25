@@ -1,308 +1,269 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>ลงทะเบียนสัมมนา กรมทรัพยากรน้ำ</title>
-  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
-  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-  <style>
-    body { font-family: 'Sarabun', sans-serif; background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); min-height: 100vh; }
-    .glass-panel { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border-radius: 1.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-    
-    /* การแสดงผลโลโก้ห้ามตัดทอนตามคำสั่งของผู้ใช้ */
-    .logo-img { width: 100%; max-width: 250px; height: auto; object-fit: contain; margin: 0 auto; display: block; }
-    
-    /* Water Drop Loader */
-    .loader-container { display: flex; justify-content: center; align-items: center; height: 100px; }
-    .water-drop {
-      width: 40px; height: 40px; background: #0ea5e9;
-      border-radius: 0 50% 50% 50%;
-      transform: rotate(45deg);
-      animation: dropBounce 1s infinite alternate cubic-bezier(0.5, 0.05, 1, 0.5);
-      box-shadow: inset -5px -5px 10px rgba(0,0,0,0.1);
-    }
-    @keyframes dropBounce {
-      0% { transform: rotate(45deg) translate(0, 0) scale(1); }
-      100% { transform: rotate(45deg) translate(-20px, -20px) scale(0.9); background: #38bdf8; }
-    }
-  </style>
-</head>
-<body class="p-4 text-gray-800">
-
-<div id="app" class="max-w-md mx-auto glass-panel p-6 mt-4">
-  <div class="text-center mb-6">
-    <img src="https://dwr.go.th/uploads/userfiles/images/Logodwr.png" alt="DWR Logo" class="logo-img drop-shadow-sm mb-3">
-    <h2 class="text-xl font-semibold text-sky-800">ระบบลงทะเบียนสัมมนาและจัดการห้องพัก</h2>
-  </div>
-
-  <div v-if="isLoading" class="text-center py-8">
-    <div class="loader-container"><div class="water-drop"></div></div>
-    <p class="text-sky-600 mt-4 animate-pulse">{{ loadingText }}</p>
-  </div>
-
-  <div v-if="!isLoading && currentStep === 'check'" class="space-y-4">
-    <p class="text-sm text-center text-gray-600">กรุณากรอกหมายเลขบัตรประชาชน 13 หลัก</p>
-    <input type="text" v-model="nidInput" @input="formatNid" placeholder="0-0000-00000-00-0" class="w-full text-center text-lg p-3 border border-sky-300 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none">
-    <button @click="verifyUser" class="w-full bg-sky-600 text-white font-semibold py-3 rounded-xl hover:bg-sky-700 transition shadow-lg shadow-sky-200">ตรวจสอบข้อมูล</button>
-  </div>
-
-  <div v-if="!isLoading && currentStep === 'register'" class="space-y-4">
-    <div class="bg-sky-50 p-4 rounded-xl text-sm mb-4 border border-sky-100">
-      <p><strong>ชื่อ-สกุล:</strong> {{ userData.Prefix }}{{ userData.FName }} {{ userData.LName }}</p>
-      <p><strong>ตำแหน่ง:</strong> {{ userData.Position }}</p>
-      <p><strong>สังกัด:</strong> {{ userData.Department }}</p>
-    </div>
-
-    <div>
-      <label class="block text-sm font-semibold mb-1">ความประสงค์เข้าร่วมกิจกรรม</label>
-      <select v-model="form.JoinStatus" class="w-full p-2 border border-gray-300 rounded-lg bg-white">
-        <option value="">-- กรุณาเลือก --</option>
-        <option value="เข้าร่วม">เข้าร่วม</option>
-        <option value="ไม่เข้าร่วม">ไม่เข้าร่วม</option>
-      </select>
-    </div>
-
-    <template v-if="form.JoinStatus === 'เข้าร่วม'">
-      <div class="grid grid-cols-2 gap-2">
-        <div>
-          <label class="block text-sm font-semibold mb-1">การเดินทาง (ขาไป)</label>
-          <select v-model="form.TravelGo" class="w-full p-2 border border-gray-300 rounded-lg bg-white">
-            <option value="">เลือก</option>
-            <option value="รถยนต์ส่วนตัว">รถยนต์ส่วนตัว</option>
-            <option value="รถกรมฯ">รถกรมฯจัดหา</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-semibold mb-1">การเดินทาง (ขากลับ)</label>
-          <select v-model="form.TravelReturn" class="w-full p-2 border border-gray-300 rounded-lg bg-white">
-            <option value="">เลือก</option>
-            <option value="รถยนต์ส่วนตัว">รถยนต์ส่วนตัว</option>
-            <option value="รถกรมฯ">รถกรมฯจัดหา</option>
-          </select>
-        </div>
-      </div>
-
-      <div>
-        <label class="block text-sm font-semibold mb-1">การแพ้อาหาร</label>
-        <select v-model="allergySelect" class="w-full p-2 border border-gray-300 rounded-lg bg-white mb-2">
-          <option value="ไม่แพ้">ไม่แพ้</option>
-          <option value="แพ้">แพ้ (ระบุ)</option>
-        </select>
-        <input v-if="allergySelect === 'แพ้'" type="text" v-model="form.Allergy" placeholder="ระบุอาหารที่แพ้" class="w-full p-2 border border-gray-300 rounded-lg">
-      </div>
-
-      <div>
-        <label class="block text-sm font-semibold mb-1">ประเภทอาหาร</label>
-        <select v-model="foodSelect" class="w-full p-2 border border-gray-300 rounded-lg bg-white mb-2">
-          <option value="">เลือก</option>
-          <option value="ทานได้ทุกอย่าง">ทานได้ทุกอย่าง</option>
-          <option value="อิสลาม">อิสลาม</option>
-          <option value="มังสวิรัติ">มังสวิรัติ</option>
-          <option value="อื่นๆ">อื่น ๆ (ระบุ)</option>
-        </select>
-        <input v-if="foodSelect === 'อื่นๆ'" type="text" v-model="form.FoodType" placeholder="ระบุประเภทอาหาร" class="w-full p-2 border border-gray-300 rounded-lg">
-      </div>
-
-      <div>
-        <label class="block text-sm font-semibold mb-1">หมายเลขโทรศัพท์</label>
-        <input type="tel" v-model="form.Mobile" maxlength="10" class="w-full p-2 border border-gray-300 rounded-lg">
-      </div>
-
-      <div>
-        <label class="block text-sm font-semibold mb-1">ข้อมูลเพิ่มเติม (ถ้ามี)</label>
-        <textarea v-model="form.Extra" class="w-full p-2 border border-gray-300 rounded-lg" rows="2"></textarea>
-      </div>
-    </template>
-
-    <button @click="submitRegister" class="w-full bg-sky-600 text-white font-semibold py-3 rounded-xl mt-4 hover:bg-sky-700 shadow-md">บันทึกข้อมูล</button>
-  </div>
-
-  <div v-if="!isLoading && currentStep === 'roommate'" class="space-y-4">
-    <div class="text-center mb-4 pb-2 border-b border-sky-100">
-      <h3 class="font-bold text-sky-800 text-lg">การจัดการห้องพัก</h3>
-    </div>
-
-    <div v-if="roomData.status === 'single_room'" class="text-center text-green-600 p-4 bg-green-50 rounded-xl">
-      ท่านได้รับสิทธิ์การพักเดี่ยว (Single Room) ไม่จำเป็นต้องจับคู่นอน
-    </div>
-
-    <div v-else-if="roomData.myMatch" class="text-center p-4 bg-sky-100 border border-sky-200 rounded-xl">
-      <p class="text-sm text-gray-600">คู่ห้องพักของท่านคือ</p>
-      <p class="font-bold text-sky-800 text-lg mt-1">{{ roomData.myMatch.name }}</p>
-    </div>
-
-    <div v-else>
-      <div v-if="roomData.myPending.length > 0" class="mb-4">
-        <h4 class="font-semibold text-sm text-orange-600 mb-2">คำขอจับคู่ถึงคุณ</h4>
-        <div v-for="req in roomData.myPending" :key="req.uid" class="flex justify-between items-center bg-orange-50 p-3 rounded-lg border border-orange-100 mb-2">
-          <span class="text-sm font-medium">{{ req.name }}</span>
-          <div class="flex gap-2">
-            <button @click="respondRoom(req.uid, 'Matched')" class="bg-green-500 text-white px-3 py-1 rounded text-xs shadow">ตอบรับ</button>
-            <button @click="respondRoom(req.uid, 'Cancelled')" class="bg-red-500 text-white px-3 py-1 rounded text-xs shadow">ปฏิเสธ</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="relative">
-        <input type="text" v-model="searchRoommate" placeholder="ค้นหาชื่อ-สกุล เพื่อจับคู่..." class="w-full p-3 border border-sky-200 rounded-xl outline-none focus:border-sky-500">
-        <div v-if="searchRoommate && filteredUsers.length > 0" class="absolute w-full bg-white border border-gray-200 mt-1 max-h-48 overflow-y-auto rounded-xl shadow-xl z-10">
-          <div v-for="user in filteredUsers" :key="user.uid" class="p-3 border-b border-gray-100 flex justify-between items-center hover:bg-sky-50">
-            <div>
-              <p class="text-sm font-semibold">{{ user.name }}</p>
-              <p class="text-xs text-gray-500">{{ user.dept }}</p>
-            </div>
-            <button v-if="!isRequested(user.uid)" @click="requestRoom(user.uid)" class="text-xs bg-sky-100 text-sky-700 px-3 py-1 rounded-full font-semibold">ส่งคำขอ</button>
-            <span v-else class="text-xs text-gray-400 bg-gray-100 px-3 py-1 rounded-full">รอตอบรับ</span>
-          </div>
-        </div>
-        <p v-if="searchRoommate && filteredUsers.length === 0" class="text-xs text-red-500 mt-2">
-          ไม่พบรายชื่อ บุคคลนี้อาจยังไม่ลงทะเบียน ไม่เข้าร่วม หรือมีคู่แล้ว
-        </p>
-      </div>
-    </div>
-  </div>
-
-</div>
-
-<script>
-  // แทนที่ URL นี้ด้วย Web App URL ของ GAS
-  const GAS_URL = "https://script.google.com/macros/s/AKfycbz4SW3PjipqUdAMCj-IbqJhxTzUPyKq-Qa_5dkserHvu28bIFdFmHmeD5ReDtkjDaqc/exec"; 
-
-  const { createApp } = Vue;
-
-  createApp({
-    data() {
-      return {
-        isLoading: true, loadingText: "กำลังเชื่อมต่อระบบ...", currentStep: "check",
-        lineProfile: { userId: "" },
-        nidInput: "",
-        userData: {},
-        form: { JoinStatus: "", TravelGo: "", TravelReturn: "", Allergy: "", FoodType: "", Mobile: "", Extra: "", NID: "" },
-        allergySelect: "ไม่แพ้", foodSelect: "",
-        roomData: { status: "", available: [], myRequests: [], myPending: [], myMatch: null },
-        searchRoommate: "",
-        pollingInterval: null
-      };
-    },
-    computed: {
-      filteredUsers() {
-        if (!this.searchRoommate) return [];
-        return this.roomData.available.filter(u => u.name.includes(this.searchRoommate));
-      }
-    },
-    async mounted() {
-      // Mockup สำหรับรันนอก LINE นำ LIFF init ของจริงมาใส่เมื่อใช้จริง
-       await liff.init({ liffId: "2010492833-vdob7H57" }); 
-      // if (liff.isLoggedIn()) { const profile = await liff.getProfile(); this.lineProfile.userId = profile.userId; } 
-      
-      this.lineProfile.userId = "U1234567890"; // Mock Line UID
-      this.initialCheck();
-    },
-    beforeUnmount() {
-      if (this.pollingInterval) clearInterval(this.pollingInterval);
-    },
-    methods: {
-      formatNid() {
-        let val = this.nidInput.replace(/\D/g, '');
-        if (val.length > 13) val = val.substring(0, 13);
-        let formatted = '';
-        for (let i = 0; i < val.length; i++) {
-          if (i === 1 || i === 5 || i === 10 || i === 12) formatted += '-';
-          formatted += val[i];
-        }
-        this.nidInput = formatted;
-      },
-      async apiCall(action, payload = {}) {
-        const response = await fetch(GAS_URL, {
-          method: "POST", body: JSON.stringify({ action, lineUid: this.lineProfile.userId, ...payload })
-        });
-        return await response.json();
-      },
-      async initialCheck() {
-        try {
-          const res = await this.apiCall("checkUser");
-          if (res.status === "registered" || res.status === "found_db") {
-            this.mapData(res.data, res.status);
-            this.currentStep = "register";
-          } else {
-            this.currentStep = "check";
-          }
-        } catch (e) {
-          Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error');
-        } finally {
-          this.isLoading = false;
-        }
-      },
-      async verifyUser() {
-        if (this.nidInput.length !== 17) return Swal.fire('แจ้งเตือน', 'กรุณากรอกเลขบัตร 13 หลักให้ครบถ้วน', 'warning');
-        this.isLoading = true; this.loadingText = "กำลังค้นหาข้อมูล...";
-        const res = await this.apiCall("checkUser", { nid: this.nidInput });
-        this.isLoading = false;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ลงทะเบียนงานสัมมนา DWR</title>
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Sarabun', sans-serif; background-color: #f0f8ff; }
         
-        if (res.status === "found_db") {
-          this.mapData(res.data, res.status);
-          this.currentStep = "register";
-        } else {
-          Swal.fire('ไม่พบข้อมูล', 'ไม่พบรายชื่อของท่านในระบบ กรุณาติดต่อเจ้าหน้าที่', 'error');
+        /* Water Drop Loading Animation */
+        .water-loader {
+            width: 50px;
+            height: 50px;
+            background-color: #3b82f6;
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            animation: bounce 1s infinite alternate cubic-bezier(0.5, 0.05, 1, 0.5);
+            margin: 0 auto;
         }
-      },
-      mapData(data, source) {
-        if (source === "found_db") {
-          this.userData = { NID: data[0], Prefix: data[2], FName: data[3], LName: data[4], Position: data[5], Department: data[6] };
-          this.form.NID = data[0];
-        } else {
-          // Map registered data logic here
-          this.form.NID = data[1]; this.form.JoinStatus = data[3];
+        @keyframes bounce {
+            0% { transform: rotate(-45deg) translate(0, 0); }
+            100% { transform: rotate(-45deg) translate(30px, 30px); border-radius: 50% 50% 50% 10%; }
         }
-      },
-      async submitRegister() {
-        if (!this.form.JoinStatus) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกความประสงค์', 'warning');
-        if (this.foodSelect !== 'อื่นๆ') this.form.FoodType = this.foodSelect;
-        if (this.allergySelect !== 'แพ้') this.form.Allergy = "ไม่แพ้";
+        .loading-screen {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.9); display: flex;
+            flex-direction: column; justify-content: center; align-items: center; z-index: 50;
+        }
+        
+        /* Input formatting */
+        .input-dwr {
+            width: 100%; padding: 0.75rem; border: 1px solid #93c5fd; border-radius: 0.5rem;
+            margin-top: 0.5rem; outline: none; transition: border-color 0.3s;
+        }
+        .input-dwr:focus { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
+    </style>
+</head>
+<body class="text-gray-700">
 
-        this.isLoading = true; this.loadingText = "กำลังบันทึกข้อมูล...";
-        const res = await this.apiCall("registerUser", { payload: this.form });
-        this.isLoading = false;
+    <div id="loading" class="loading-screen">
+        <div class="water-loader"></div>
+        <p class="mt-8 text-blue-600 font-bold text-lg">กำลังประมวลผลสายน้ำ...</p>
+    </div>
 
-        if (res.status === "success") {
-          Swal.fire('สำเร็จ', 'บันทึกข้อมูลเรียบร้อย', 'success');
-          if (this.form.JoinStatus === 'เข้าร่วม') {
-            this.currentStep = "roommate";
-            this.startRoommateSync();
-          } else {
-            liff.closeWindow();
-          }
-        } else {
-          Swal.fire('ข้อผิดพลาด', res.message || 'เกิดข้อผิดพลาด', 'error');
+    <div class="max-w-md mx-auto bg-white min-h-screen shadow-lg p-6 hidden" id="app">
+        <div class="text-center mb-6">
+            <img src="https://dwr.go.th/uploads/userfiles/images/Logodwr.png" alt="Logo" class="h-24 mx-auto mb-2 drop-shadow-md">
+            <h1 class="text-2xl font-bold text-blue-800">ระบบลงทะเบียนสัมมนา</h1>
+            <p class="text-sm text-blue-500">กรมทรัพยากรน้ำ</p>
+        </div>
+
+        <div id="section-check-id" class="hidden animate-fade-in">
+            <p class="text-center text-red-500 mb-4 font-semibold">ยังไม่พบประวัติการลงทะเบียนของคุณ</p>
+            <label class="block font-medium">โปรดกรอกเลขประจำตัวประชาชน (13 หลัก)</label>
+            <input type="text" id="natID" class="input-dwr text-center text-lg tracking-widest" placeholder="X-XXXX-XXXXX-XX-X" maxlength="17" oninput="formatNatID(this)">
+            <button onclick="verifyNatID()" class="w-full mt-4 bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 shadow-md">ตรวจสอบข้อมูล</button>
+        </div>
+
+        <div id="section-register" class="hidden">
+            <div class="bg-blue-50 p-4 rounded-lg mb-4 border border-blue-200">
+                <p id="dispName" class="font-bold text-blue-800"></p>
+                <p id="dispPos" class="text-sm text-gray-600"></p>
+                <p id="dispDept" class="text-sm text-gray-600"></p>
+            </div>
+
+            <form id="regForm" onsubmit="submitForm(event)">
+                <div class="mb-4">
+                    <label class="block font-medium">ความประสงค์เข้าร่วมกิจกรรม</label>
+                    <select id="f_attend" class="input-dwr" onchange="toggleForm(this.value)">
+                        <option value="">-- กรุณาเลือก --</option>
+                        <option value="Y">เข้าร่วม</option>
+                        <option value="N">ไม่เข้าร่วม</option>
+                    </select>
+                </div>
+                
+                <div id="attendDetails" class="hidden">
+                    <div class="mb-4">
+                        <label class="block font-medium">การเดินทาง (ขาไป)</label>
+                        <select id="f_travelGo" class="input-dwr">
+                            <option value="">-- เลือก --</option>
+                            <option value="Car">รถยนต์ส่วนบุคคล</option>
+                            <option value="Bus">รถที่กรมจัดหาให้</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block font-medium">การเดินทาง (ขากลับ)</label>
+                        <select id="f_travelBack" class="input-dwr">
+                            <option value="">-- เลือก --</option>
+                            <option value="Car">รถยนต์ส่วนบุคคล</option>
+                            <option value="Bus">รถที่กรมจัดหาให้</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block font-medium">การแพ้อาหาร</label>
+                        <select id="f_allergy" class="input-dwr" onchange="toggleInput('f_allergy', 'f_allergy_detail', 'แพ้')">
+                            <option value="">-- เลือก --</option>
+                            <option value="ไม่แพ้">ไม่แพ้</option>
+                            <option value="แพ้">แพ้ (ระบุ)</option>
+                        </select>
+                        <input type="text" id="f_allergy_detail" class="input-dwr hidden mt-2" placeholder="ระบุอาหารที่แพ้">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block font-medium">ประเภทอาหาร</label>
+                        <select id="f_food" class="input-dwr" onchange="toggleInput('f_food', 'f_food_detail', 'อื่นๆ')">
+                            <option value="">-- เลือก --</option>
+                            <option value="ทั่วไป">ทานได้ทุกอย่าง</option>
+                            <option value="อิสลาม">อิสลาม</option>
+                            <option value="มังสวิรัติ">มังสวิรัติ</option>
+                            <option value="อื่นๆ">อื่นๆ (ระบุ)</option>
+                        </select>
+                        <input type="text" id="f_food_detail" class="input-dwr hidden mt-2" placeholder="ระบุประเภทอาหาร">
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block font-medium">หมายเลขโทรศัพท์มือถือ</label>
+                    <input type="tel" id="f_phone" class="input-dwr" placeholder="08xxxxxxxx" maxlength="10">
+                </div>
+                <div class="mb-4">
+                    <label class="block font-medium">ข้อเสนอแนะเพิ่มเติม (ไม่บังคับ)</label>
+                    <textarea id="f_extra" class="input-dwr h-20"></textarea>
+                </div>
+
+                <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 shadow-md">บันทึกข้อมูล</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // !! เปลี่ยนเป็น Web App URL ของคุณที่ Deploy จาก GAS !!
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbz4SW3PjipqUdAMCj-IbqJhxTzUPyKq-Qa_5dkserHvu28bIFdFmHmeD5ReDtkjDaqc/exec";
+        const LIFF_ID = "2010492833-vdob7H57";
+        let userLineUID = "";
+        let unmaskedNatID = "";
+
+        // เริ่มต้น LIFF
+        async function initApp() {
+            try {
+                await liff.init({ liffId: LIFF_ID });
+                if (!liff.isLoggedIn()) {
+                    liff.login();
+                    return;
+                }
+                const profile = await liff.getProfile();
+                userLineUID = profile.userId;
+                checkUser(userLineUID);
+            } catch (err) {
+                Swal.fire('Error', 'ไม่สามารถเชื่อมต่อ LINE ได้', 'error');
+            }
         }
-      },
-      startRoommateSync() {
-        this.fetchRoommates();
-        this.pollingInterval = setInterval(this.fetchRoommates, 5000); // Realtime Sync ทุก 5 วินาที
-      },
-      async fetchRoommates() {
-        const res = await this.apiCall("getRoommates");
-        if (res.status === "success" || res.status === "single_room") {
-          this.roomData = res;
+
+        // เชื่อมต่อ GAS API
+        async function callGAS(payload) {
+            showLoading(true);
+            try {
+                const response = await fetch(GAS_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // ใช้ text/plain เลี่ยง preflight ใน GAS
+                    body: JSON.stringify(payload)
+                });
+                const res = await response.json();
+                showLoading(false);
+                return res.data;
+            } catch (err) {
+                showLoading(false);
+                Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error');
+                console.error(err);
+            }
         }
-      },
-      isRequested(uid) {
-        return this.roomData.myRequests.some(r => r.uid === uid);
-      },
-      async requestRoom(targetUid) {
-        await this.apiCall("requestRoom", { reqUid: this.lineProfile.userId, targetUid });
-        this.fetchRoommates();
-      },
-      async respondRoom(reqUid, action) {
-        await this.apiCall("respondRoom", { myUid: this.lineProfile.userId, reqUid, action });
-        this.fetchRoommates();
-      }
-    }
-  }).mount('#app');
-</script>
+
+        async function checkUser(uid) {
+            const data = await callGAS({ action: 'checkUser', uid: uid });
+            document.getElementById('app').classList.remove('hidden');
+            
+            if (data.isRegistered) {
+                // กรณีพบข้อมูล - ตรวจสอบว่าแก้ไขได้ไหม หรือไปยังหน้าจับคู่
+                Swal.fire('พบข้อมูล', 'คุณลงทะเบียนเรียบร้อยแล้ว', 'success');
+                // TODO: Load data to form and setup room match UI
+            } else {
+                if (data.canRegister) {
+                    Swal.fire({ title: 'ยินดีต้อนรับ', text: 'ไม่พบข้อมูลในระบบ กรุณาลงทะเบียน', icon: 'info', confirmButtonText: 'ตกลง' });
+                    document.getElementById('section-check-id').classList.remove('hidden');
+                } else {
+                    Swal.fire('ปิดระบบ', 'ไม่อยู่ในช่วงเวลาการลงทะเบียน', 'warning');
+                }
+            }
+        }
+
+        // จัดรูปแบบเลขบัตรประชาชน
+        function formatNatID(input) {
+            let val = input.value.replace(/\D/g, '');
+            if (val.length > 13) val = val.substring(0, 13);
+            unmaskedNatID = val;
+            let formatted = val.replace(/(\d{1})(\d{4})(\d{5})(\d{2})(\d{1})/, "$1-$2-$3-$4-$5");
+            input.value = formatted;
+        }
+
+        async function verifyNatID() {
+            if (unmaskedNatID.length !== 13) return Swal.fire('ตรวจสอบ', 'กรุณากรอกเลขบัตร 13 หลักให้ครบถ้วน', 'warning');
+            
+            const data = await callGAS({ action: 'verifyNatID', natID: unmaskedNatID, uid: userLineUID });
+            if (data.found) {
+                document.getElementById('section-check-id').classList.add('hidden');
+                document.getElementById('section-register').classList.remove('hidden');
+                document.getElementById('dispName').innerText = data.name;
+                document.getElementById('dispPos').innerText = `ตำแหน่ง: ${data.position}`;
+                document.getElementById('dispDept').innerText = `สังกัด: ${data.department}`;
+            } else {
+                Swal.fire('ไม่พบข้อมูล', 'ไม่มีหมายเลขบัตรประชาชนนี้ในฐานข้อมูล', 'error');
+            }
+        }
+
+        function toggleForm(val) {
+            document.getElementById('attendDetails').style.display = val === 'Y' ? 'block' : 'none';
+        }
+
+        function toggleInput(selectId, inputId, triggerVal) {
+            const val = document.getElementById(selectId).value;
+            const input = document.getElementById(inputId);
+            if (val === triggerVal) { input.classList.remove('hidden'); } 
+            else { input.classList.add('hidden'); input.value = ''; }
+        }
+
+        async function submitForm(e) {
+            e.preventDefault();
+            const payload = {
+                uid: userLineUID, natID: unmaskedNatID,
+                attend: document.getElementById('f_attend').value,
+                travelGo: document.getElementById('f_travelGo').value,
+                travelBack: document.getElementById('f_travelBack').value,
+                allergy: document.getElementById('f_allergy').value === 'แพ้' ? document.getElementById('f_allergy_detail').value : document.getElementById('f_allergy').value,
+                foodType: document.getElementById('f_food').value === 'อื่นๆ' ? document.getElementById('f_food_detail').value : document.getElementById('f_food').value,
+                phone: document.getElementById('f_phone').value,
+                extra: document.getElementById('f_extra').value
+            };
+            
+            if (!payload.phone || payload.phone.length < 9) return Swal.fire('เตือน', 'กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง', 'warning');
+
+            const res = await callGAS({ action: 'saveRegister', payload: payload });
+            if (res && res.success) {
+                Swal.fire('สำเร็จ', 'บันทึกข้อมูลเรียบร้อยแล้ว', 'success').then(() => {
+                    // หากเข้าร่วม โอนไปยังส่วนของการจับคู่นอน (Room Management Logic)
+                    if(payload.attend === 'Y') {
+                       // initRoomManagement();
+                    } else {
+                        liff.closeWindow();
+                    }
+                });
+            }
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'flex' : 'none';
+        }
+
+        // ปิดเพื่อการพัฒนา ถ้ารันบน Browser ปกติ (ไม่ใช่ LINE) ข้าม init
+        // document.addEventListener("DOMContentLoaded", initApp);
+        document.addEventListener("DOMContentLoaded", () => {
+            showLoading(false); document.getElementById('app').classList.remove('hidden');
+            document.getElementById('section-check-id').classList.remove('hidden');
+        }); 
+    </script>
 </body>
 </html>
