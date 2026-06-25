@@ -3,296 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ลงทะเบียนร่วมงานสัมมนา - กรมทรัพยากรน้ำ</title>
+    <title>ลงทะเบียนเข้าร่วมสัมมนา | กรมทรัพยากรน้ำ</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    
     <style>
-        body {
-            font-family: 'Sarabun', sans-serif;
-            background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%);
-            min-height: 100vh;
-        }
-        .container-box {
-            background-color: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 119, 182, 0.1);
-            padding: 30px;
-            margin-top: 20px;
-            margin-bottom: 30px;
-        }
-        .logo-img {
-            max-width: 120px;
-            display: block;
-            margin: 0 auto;
-        }
-        .title-text {
-            color: #0077b6;
-            text-align: center;
-            font-weight: 600;
-            margin-top: 15px;
-            margin-bottom: 25px;
-        }
-        .btn-water {
-            background-color: #00b4d8;
-            color: white;
-            border-radius: 25px;
-            font-weight: 600;
-        }
-        .btn-water:hover {
-            background-color: #0096c7;
-            color: white;
-        }
-        .form-label {
-            font-weight: 600;
-            color: #023e8a;
-        }
-        /* รูปแบบกล่อง input */
-        .form-control, .form-select {
-            border-radius: 10px;
-            border: 1px solid #90e0ef;
-        }
+        body { font-family: 'Sarabun', sans-serif; background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); min-height: 100vh; }
+        .glass-panel { background: rgba(255, 255, 255, 0.95); border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        .btn-water { background: linear-gradient(to right, #0284c7, #0ea5e9); color: white; transition: all 0.3s; }
+        .btn-water:hover { background: linear-gradient(to right, #0369a1, #0284c7); transform: translateY(-2px); }
     </style>
 </head>
-<body>
+<body class="p-4 flex items-center justify-center">
 
-<div class="container d-flex justify-content-center">
-    <div class="col-12 col-md-8 col-lg-6 container-box" id="app">
-        <img src="https://dwr.go.th/uploads/userfiles/images/Logodwr.png" alt="Logo" class="logo-img">
-        <h3 class="title-text">ระบบลงทะเบียนเข้าร่วมสัมมนา<br><small class="text-muted" style="font-size: 16px;">กรมทรัพยากรน้ำ</small></h3>
-        
-        <div id="loadingSec" class="text-center py-5">
-            <div class="spinner-border text-info" role="status"></div>
-            <p class="mt-2 text-info">กำลังตรวจสอบข้อมูล...</p>
+    <div class="glass-panel w-full max-w-md p-6 relative overflow-hidden">
+        <div class="text-center mb-6">
+            <img src="https://dwr.go.th/uploads/userfiles/images/Logodwr.png" alt="DWR Logo" class="h-20 mx-auto mb-3 drop-shadow-md">
+            <h1 class="text-xl font-semibold text-sky-800">ระบบลงทะเบียนสัมมนา</h1>
+            <p class="text-sm text-sky-600">กรมทรัพยากรน้ำ (DWR)</p>
         </div>
 
-        <div id="searchSec" style="display: none;">
-            <p class="text-center text-danger">ยังไม่พบประวัติการลงทะเบียนของท่าน</p>
-            <div class="mb-3">
-                <label class="form-label">กรุณากรอกหมายเลขบัตรประชาชน</label>
-                <input type="text" class="form-control text-center" id="idCardInput" placeholder="0-0000-00000-00-0" oninput="formatIdCard(this)" maxlength="17">
+        <div id="loading" class="text-center py-10 text-sky-600">
+            <svg class="animate-spin h-8 w-8 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p>กำลังตรวจสอบข้อมูล...</p>
+        </div>
+
+        <div id="idCardSection" class="hidden">
+            <label class="block text-sm font-medium text-gray-700 mb-1">กรุณากรอกหมายเลขบัตรประชาชน</label>
+            <input type="text" id="idCardInput" placeholder="0-0000-00000-00-0" class="w-full p-3 border border-sky-200 rounded-lg focus:ring-2 focus:ring-sky-400 focus:outline-none text-center text-lg tracking-widest mb-4">
+            <button onclick="verifyIdCard()" class="btn-water w-full py-3 rounded-lg font-semibold shadow-md">ตรวจสอบข้อมูล</button>
+        </div>
+
+        <div id="step1Section" class="hidden space-y-4">
+            <div id="userInfoDisplay" class="bg-sky-50 p-3 rounded-lg border border-sky-100 text-sm text-sky-900 mb-4">
+                </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700">1. การเข้าร่วมกิจกรรม *</label>
+                <select id="joinStatus" class="w-full p-2 border rounded-lg" required>
+                    <option value="">-- เลือก --</option>
+                    <option value="Y">เข้าร่วม</option>
+                    <option value="N">ไม่เข้าร่วม</option>
+                </select>
             </div>
-            <button class="btn btn-water w-100" onclick="verifyIdCard()">ค้นหาข้อมูล</button>
+            
+            <button onclick="submitStep1()" class="btn-water w-full py-3 rounded-lg font-semibold shadow-md mt-4">บันทึกข้อมูล Step 1</button>
         </div>
 
-        <div id="step1Sec" style="display: none;">
-            <div class="alert alert-info" id="userInfoDisplay"></div>
-            <hr>
-            <h5 class="text-primary fw-bold">Step 1: ข้อมูลการเข้าร่วม</h5>
-            <form id="regForm">
-                <div class="mb-3">
-                    <label class="form-label">ความประสงค์เข้าร่วมกิจกรรม <span class="text-danger">*</span></label>
-                    <select class="form-select" id="joinIntention" required>
-                        <option value="">-- กรุณาเลือก --</option>
-                        <option value="Y">เข้าร่วม</option>
-                        <option value="N">ไม่เข้าร่วม</option>
-                    </select>
-                </div>
-                
-                <div id="joinDetails" style="display: none;">
-                    <div class="mb-3">
-                        <label class="form-label">การเดินทาง (ขาไป) <span class="text-danger">*</span></label>
-                        <select class="form-select" id="travelGo">
-                            <option value="">-- กรุณาเลือก --</option>
-                            <option value="รถยนต์ส่วนบุคคล">รถยนต์ส่วนบุคคล</option>
-                            <option value="รถที่กรมจัดหาให้">รถที่กรมจัดหาให้</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">การเดินทาง (ขากลับ) <span class="text-danger">*</span></label>
-                        <select class="form-select" id="travelReturn">
-                            <option value="">-- กรุณาเลือก --</option>
-                            <option value="รถยนต์ส่วนบุคคล">รถยนต์ส่วนบุคคล</option>
-                            <option value="รถที่กรมจัดหาให้">รถที่กรมจัดหาให้</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">การแพ้อาหาร <span class="text-danger">*</span></label>
-                        <select class="form-select" id="allergyChoice" onchange="toggleAllergyDetail()">
-                            <option value="ไม่แพ้">ไม่แพ้</option>
-                            <option value="แพ้">แพ้ (โปรดระบุ)</option>
-                        </select>
-                        <input type="text" class="form-control mt-2" id="allergyDetail" placeholder="ระบุสิ่งที่แพ้" style="display: none;">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">ประเภทอาหาร <span class="text-danger">*</span></label>
-                        <select class="form-select" id="foodType" onchange="toggleFoodDetail()">
-                            <option value="">-- กรุณาเลือก --</option>
-                            <option value="ทานได้ทุกอย่าง">ทานได้ทุกอย่าง</option>
-                            <option value="อิสลาม">อิสลาม</option>
-                            <option value="มังสวิรัติ">มังสวิรัติ</option>
-                            <option value="อื่นๆ">อื่น ๆ (โปรดระบุ)</option>
-                        </select>
-                        <input type="text" class="form-control mt-2" id="foodOther" placeholder="ระบุประเภทอาหาร" style="display: none;">
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">หมายเลขโทรศัพท์มือถือ <span class="text-danger">*</span></label>
-                    <input type="tel" class="form-control" id="phone" required maxlength="10">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">ข้อมูลเพิ่มเติม (ถ้ามี)</label>
-                    <textarea class="form-control" id="additionalInfo" rows="2"></textarea>
-                </div>
-                
-                <button type="button" class="btn btn-water w-100" onclick="submitStep1()">บันทึกข้อมูล Step 1</button>
-            </form>
-        </div>
-
-        <div id="step2Sec" style="display: none;">
-            <h5 class="text-primary fw-bold">Step 2: การจัดการห้องพัก</h5>
-            <div id="roomManagementContent">
-                </div>
-        </div>
+        <div id="step2Section" class="hidden">
+            <h2 class="text-lg font-semibold text-sky-800 border-b pb-2 mb-4">Step 2: จัดการห้องพัก</h2>
+            <div class="relative">
+                <input type="text" placeholder="ค้นหาชื่อ-สกุล เพื่อจับคู่..." class="w-full p-2 border rounded-lg">
+                <p class="text-xs text-gray-400 mt-2">* หากไม่พบรายชื่อ อาจเป็นไปได้ว่าบุคคลนั้นยังไม่ลงทะเบียน หรือถูกจับคู่ไปแล้ว</p>
+            </div>
+            </div>
 
     </div>
-</div>
 
-<script>
-    // ตั้งค่า URL ของ GAS (แก้ URL ให้ตรงกับที่ Deploy)
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbz4SW3PjipqUdAMCj-IbqJhxTzUPyKq-Qa_5dkserHvu28bIFdFmHmeD5ReDtkjDaqc/exec";
-    let userProfile = {};
-    let dbInfo = {};
+    <script>
+        const LIFF_ID = "2010492833-vdob7H57";
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbz4SW3PjipqUdAMCj-IbqJhxTzUPyKq-Qa_5dkserHvu28bIFdFmHmeD5ReDtkjDaqc/exec"; // URL ของคุณ
+        let userLineUid = "";
 
-    // เริ่มทำงาน LIFF
-    async function initLiff() {
-        try {
-            await liff.init({ liffId: "2010492833-vdob7H57" });
-            if (liff.isLoggedIn()) {
-                userProfile = await liff.getProfile();
-                checkUserStatus();
-            } else {
-                liff.login();
+        // 1. Initialize LIFF
+        async function initializeApp() {
+            try {
+                await liff.init({ liffId: LIFF_ID });
+                if (!liff.isLoggedIn()) {
+                    liff.login();
+                    return;
+                }
+                const profile = await liff.getProfile();
+                userLineUid = profile.userId;
+                checkUserInSystem();
+            } catch (err) {
+                Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อ LINE ได้', 'error');
             }
-        } catch (err) {
-            Swal.fire('Error', 'ไม่สามารถเชื่อมต่อ LINE ได้', 'error');
-        }
-    }
-
-    // ฟังก์ชันจัดฟอร์แมตบัตรประชาชน
-    function formatIdCard(input) {
-        let val = input.value.replace(/\D/g, '');
-        let formatted = '';
-        if(val.length > 0) formatted += val.substring(0,1);
-        if(val.length > 1) formatted += '-' + val.substring(1,5);
-        if(val.length > 5) formatted += '-' + val.substring(5,10);
-        if(val.length > 10) formatted += '-' + val.substring(10,12);
-        if(val.length > 12) formatted += '-' + val.substring(12,13);
-        input.value = formatted;
-    }
-
-    // ติดต่อ Server ผ่าน Fetch API
-    async function callGasAPI(action, payload) {
-        const bodyData = { action: action, ...payload };
-        const response = await fetch(GAS_URL, {
-            method: 'POST',
-            body: JSON.stringify(bodyData),
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' } // หลีกเลี่ยง Preflight CORS errors บน GAS
-        });
-        return await response.json();
-    }
-
-    async function checkUserStatus() {
-        document.getElementById('loadingSec').style.display = 'block';
-        document.getElementById('searchSec').style.display = 'none';
-        
-        const res = await callGasAPI('checkUser', { lineUid: userProfile.userId });
-        document.getElementById('loadingSec').style.display = 'none';
-
-        if (res.data.isRegistered) {
-            // แสดงหน้าแก้ไข/สรุปข้อมูล
-            Swal.fire('ยินดีต้อนรับ', 'ท่านได้ลงทะเบียนไว้แล้ว', 'success');
-            // TODO: เขียน logic ดึงข้อมูลเดิมมาเติมลง Form และแสดง Step 2
-        } else {
-            // แสดงหน้าค้นหาบัตร ปชช
-            document.getElementById('searchSec').style.display = 'block';
-        }
-    }
-
-    async function verifyIdCard() {
-        const idInput = document.getElementById('idCardInput').value;
-        if(idInput.length < 17) {
-            Swal.fire('แจ้งเตือน', 'กรุณากรอกเลขบัตร 13 หลักให้ครบถ้วน', 'warning');
-            return;
         }
 
-        Swal.fire({ title: 'กำลังค้นหา...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
-        
-        const res = await callGasAPI('verifyIdCard', { idCard: idInput, lineUid: userProfile.userId });
-        
-        if (res.data.found) {
-            Swal.close();
-            dbInfo = res.data;
-            dbInfo.idCard = idInput;
-            
-            document.getElementById('searchSec').style.display = 'none';
-            document.getElementById('step1Sec').style.display = 'block';
-            
+        // 2. Check User Status from Backend
+        async function checkUserInSystem(idCard = null) {
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('idCardSection').classList.add('hidden');
+
+            try {
+                const response = await fetch(GAS_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'checkUser', lineUid: userLineUid, idCard: idCard })
+                });
+                const result = await response.json();
+                
+                document.getElementById('loading').classList.add('hidden');
+
+                if (result.status === 'require_id') {
+                    document.getElementById('idCardSection').classList.remove('hidden');
+                } else if (result.status === 'found_db') {
+                    // เจอใน Database แสดง Step 1
+                    renderStep1(result.data);
+                } else if (result.status === 'found_register') {
+                    // ลงทะเบียนแล้ว พาไปหน้าแก้ หรือ Step 2
+                    Swal.fire('พบข้อมูล', 'คุณได้ลงทะเบียนไว้แล้ว', 'success');
+                    // Logic เปิด Step 1/2...
+                } else {
+                    Swal.fire('แจ้งเตือน', result.message, 'warning');
+                    document.getElementById('idCardSection').classList.remove('hidden');
+                }
+            } catch (error) {
+                Swal.fire('ข้อผิดพลาด', 'ติดต่อเซิร์ฟเวอร์ไม่ได้', 'error');
+            }
+        }
+
+        // 3. UI Interactions
+        function verifyIdCard() {
+            const id = document.getElementById('idCardInput').value;
+            // Basic Regex check for 0-0000-00000-00-0
+            const idPattern = /^\d-\d{4}-\d{5}-\d{2}-\d$/;
+            if(!idPattern.test(id)) {
+                Swal.fire('รูปแบบไม่ถูกต้อง', 'กรุณากรอกให้อยู่ในรูปแบบ 0-0000-00000-00-0', 'warning');
+                return;
+            }
+            checkUserInSystem(id);
+        }
+
+        function renderStep1(userData) {
+            document.getElementById('step1Section').classList.remove('hidden');
             document.getElementById('userInfoDisplay').innerHTML = `
-                <strong>ชื่อ-สกุล:</strong> ${dbInfo.fullName}<br>
-                <strong>ตำแหน่ง:</strong> ${dbInfo.position} (${dbInfo.department})
+                <b>${userData.prefix}${userData.fname} ${userData.lname}</b><br>
+                ตำแหน่ง: ${userData.position}<br>
+                สังกัด: ${userData.dept}
             `;
-        } else {
-            Swal.fire('ไม่พบข้อมูล', 'ไม่พบหมายเลขบัตรประชาชนของท่านในฐานข้อมูล', 'error');
-        }
-    }
-
-    // ซ่อนแสดง UI
-    document.getElementById('joinIntention').addEventListener('change', function() {
-        document.getElementById('joinDetails').style.display = (this.value === 'Y') ? 'block' : 'none';
-    });
-
-    function toggleAllergyDetail() {
-        const choice = document.getElementById('allergyChoice').value;
-        document.getElementById('allergyDetail').style.display = (choice === 'แพ้') ? 'block' : 'none';
-    }
-
-    function toggleFoodDetail() {
-        const choice = document.getElementById('foodType').value;
-        document.getElementById('foodOther').style.display = (choice === 'อื่นๆ') ? 'block' : 'none';
-    }
-
-    async function submitStep1() {
-        // Validate inputs
-        const join = document.getElementById('joinIntention').value;
-        const phone = document.getElementById('phone').value;
-        if(!join || !phone) {
-            Swal.fire('แจ้งเตือน', 'กรุณากรอกข้อมูลที่มีเครื่องหมาย * ให้ครบถ้วน', 'warning');
-            return;
+            // เก็บค่า userData.single ไว้เช็คสำหรับ Step 2
         }
 
-        const regData = {
-            lineUid: userProfile.userId,
-            idCard: dbInfo.idCard,
-            fullName: dbInfo.fullName,
-            join: join,
-            travelGo: document.getElementById('travelGo').value,
-            travelReturn: document.getElementById('travelReturn').value,
-            allergyDetails: document.getElementById('allergyChoice').value === 'แพ้' ? document.getElementById('allergyDetail').value : '',
-            foodType: document.getElementById('foodType').value === 'อื่นๆ' ? document.getElementById('foodOther').value : document.getElementById('foodType').value,
-            phone: phone,
-            additional: document.getElementById('additionalInfo').value
-        };
-
-        Swal.fire({ title: 'กำลังบันทึก...', didOpen: () => { Swal.showLoading() } });
-
-        const res = await callGasAPI('saveRegistration', { regData: regData });
-        if(res.status === 'success') {
+        function submitStep1() {
+            // Logic ดึงข้อมูลจากฟอร์ม และ fetch ส่ง POST กลับไปที่ action: 'registerStep1'
+            // จากนั้นซ่อน Step 1 และเปิด Step 2
+            document.getElementById('step1Section').classList.add('hidden');
+            document.getElementById('step2Section').classList.remove('hidden');
             Swal.fire('สำเร็จ', 'บันทึกข้อมูล Step 1 เรียบร้อย', 'success');
-            document.getElementById('step1Sec').style.display = 'none';
-            if(join === 'Y' && dbInfo.singleRoom !== 'Y') {
-                document.getElementById('step2Sec').style.display = 'block';
-                // TODO: Load Step 2 logic
-            }
-        } else {
-            Swal.fire('ข้อผิดพลาด', res.message, 'error');
         }
-    }
 
-    // เริ่มต้นระบบ
-    initLiff();
-</script>
+        // เริ่มการทำงาน
+        initializeApp();
+    </script>
 </body>
 </html>
