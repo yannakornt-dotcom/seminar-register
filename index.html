@@ -1,423 +1,435 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ลงทะเบียนสัมมนา - กรมทรัพยากรน้ำ</title>
-  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-
-  <style>
-    body { font-family: 'Sarabun', sans-serif; background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); min-height: 100vh; }
-    .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-top: 5px solid #0284c7; }
-    .input-field { width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; outline: none; transition: border 0.3s; }
-    .input-field:focus { border-color: #0284c7; box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2); }
-    .btn-primary { background: linear-gradient(to right, #0284c7, #0369a1); color: white; padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; width: 100%; text-align: center; display: block; transition: transform 0.1s; }
-    .btn-primary:active { transform: scale(0.98); }
-    .loader { border: 4px solid #f3f3f3; border-top: 4px solid #0284c7; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ลงทะเบียนสัมมนา - กรมทรัพยากรน้ำ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { font-family: 'Sarabun', sans-serif; background: linear-gradient(180deg, #e0f2fe 0%, #bae6fd 100%); min-height: 100vh;}
+        .wave-bg { background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%230284c7" fill-opacity="0.1" d="M0,192L48,197.3C96,203,192,213,288,229.3C384,245,480,267,576,250.7C672,235,768,181,864,165.3C960,149,1056,171,1152,192C1248,213,1344,235,1392,245.3L1440,256L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>'); background-position: bottom; background-repeat: no-repeat; background-size: cover;}
+    </style>
 </head>
-<body class="p-4 sm:p-6 text-gray-800">
+<body class="wave-bg pb-10">
 
-  <div class="max-w-md mx-auto glass-card p-6 overflow-hidden relative">
-    
-    <div class="text-center mb-6">
-      <img src="https://dwr.go.th/uploads/userfiles/images/Logodwr.png" alt="DWR Logo" class="h-20 mx-auto mb-3 drop-shadow-sm">
-      <h1 class="text-xl font-bold text-sky-800">ระบบลงทะเบียนสัมมนา</h1>
-      <p class="text-sm text-sky-600">และบริหารจัดการห้องพัก กรมทรัพยากรน้ำ</p>
+<div class="max-w-md mx-auto pt-8 px-4">
+    <div class="text-center mb-6 bg-white rounded-2xl shadow-lg p-4">
+        <img src="https://dwr.go.th/uploads/userfiles/images/Logodwr.png" alt="DWR Logo" class="h-20 mx-auto mb-2 drop-shadow-md">
+        <h1 class="text-xl font-bold text-cyan-800">ระบบลงทะเบียนสัมมนา</h1>
+        <p class="text-sm text-cyan-600">และการจัดการห้องพัก กรมทรัพยากรน้ำ</p>
     </div>
 
-    <div id="loadingUI" class="text-center py-10">
-      <div class="loader"></div>
-      <p class="text-sky-700 animate-pulse" id="loadingText">กำลังเชื่อมต่อระบบ...</p>
+    <div id="loading" class="text-center py-10 bg-white/80 rounded-xl">
+        <i class="fas fa-spinner fa-spin text-4xl text-cyan-600"></i>
+        <p class="mt-3 text-cyan-800">กำลังตรวจสอบข้อมูล...</p>
     </div>
 
-    <div id="checkIdUI" class="hidden space-y-4">
-      <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 text-sm">
-        <p>ไม่พบประวัติการลงทะเบียนของท่านในระบบ กรุณายืนยันตัวตนด้วยหมายเลขบัตรประชาชน</p>
-      </div>
-      <div>
-        <label class="block text-sm font-medium mb-1">หมายเลขบัตรประชาชน</label>
-        <input type="text" id="idCardInput" class="input-field" placeholder="x-xxxx-xxxxx-xx-x" maxlength="17" oninput="formatIdCard(this)">
-      </div>
-      <button onclick="verifyIdCard()" class="btn-primary">ตรวจสอบข้อมูล</button>
-    </div>
-
-    <div id="registerUI" class="hidden space-y-4">
-      <div id="userInfoDisplay" class="bg-sky-50 p-3 rounded-lg border border-sky-100 text-sm font-medium text-sky-800 mb-4"></div>
-      
-      <form id="regForm" onsubmit="submitRegistration(event)" class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium mb-1 text-red-600">* ความประสงค์เข้าร่วมกิจกรรม</label>
-          <select id="attend" class="input-field" required onchange="toggleFormFields()">
-            <option value="">-- เลือก --</option>
-            <option value="Y">เข้าร่วม</option>
-            <option value="N">ไม่เข้าร่วม</option>
-          </select>
-        </div>
-
-        <div id="fullFormFields" class="space-y-4 hidden">
-          <div>
-            <label class="block text-sm font-medium mb-1 text-red-600">* การเดินทาง (ขาไป)</label>
-            <select id="goTravel" class="input-field" required>
-              <option value="">-- เลือก --</option>
-              <option value="Personal">รถยนต์ส่วนบุคคล</option>
-              <option value="Provided">รถที่กรมจัดหาให้</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium mb-1 text-red-600">* การเดินทาง (ขากลับ)</label>
-            <select id="returnTravel" class="input-field" required>
-              <option value="">-- เลือก --</option>
-              <option value="Personal">รถยนต์ส่วนบุคคล</option>
-              <option value="Provided">รถที่กรมจัดหาให้</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium mb-1 text-red-600">* การแพ้อาหาร</label>
-            <select id="allergySelect" class="input-field" required onchange="checkAllergy()">
-              <option value="">-- เลือก --</option>
-              <option value="ไม่แพ้">ไม่แพ้</option>
-              <option value="แพ้">แพ้</option>
-            </select>
-            <input type="text" id="allergyDetail" class="input-field mt-2 hidden" placeholder="ระบุอาหารที่แพ้">
-          </div>
-          <div>
-            <label class="block text-sm font-medium mb-1 text-red-600">* ข้อมูลอาหาร</label>
-            <select id="foodSelect" class="input-field" required onchange="checkFood()">
-              <option value="">-- เลือก --</option>
-              <option value="ทานได้ทุกอย่าง">ทานได้ทุกอย่าง</option>
-              <option value="อิสลาม">อิสลาม</option>
-              <option value="มังสวิรัติ">มังสวิรัติ</option>
-              <option value="อื่น ๆ">อื่น ๆ</option>
-            </select>
-            <input type="text" id="foodDetail" class="input-field mt-2 hidden" placeholder="ระบุความต้องการเพิ่มเติม">
-          </div>
-          <div>
-            <label class="block text-sm font-medium mb-1 text-red-600">* หมายเลขโทรศัพท์มือถือ</label>
-            <input type="tel" id="phone" class="input-field" required maxlength="10" placeholder="08xxxxxxxx">
-          </div>
-          <div>
-            <label class="block text-sm font-medium mb-1">ข้อมูลเพิ่มเติม (ไม่บังคับ)</label>
-            <textarea id="note" class="input-field" rows="2" placeholder="ความต้องการเพิ่มเติม..."></textarea>
-          </div>
-        </div>
+    <div id="main-content" class="hidden">
         
-        <button type="submit" class="btn-primary" id="btnSubmit">บันทึกข้อมูล</button>
-      </form>
-      <button onclick="goToPairing()" id="btnGoPairing" class="w-full text-center text-sky-600 text-sm mt-4 hidden font-medium underline">ข้ามไปจัดการห้องพัก >></button>
-    </div>
+        <div id="step-1" class="bg-white rounded-2xl shadow-lg p-5 mb-6 border-t-4 border-cyan-500">
+            <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center justify-between">
+                <span><i class="fas fa-file-signature text-cyan-500 mr-2"></i> Step 1: ข้อมูลส่วนตัว</span>
+                <button id="toggle-step1" class="text-gray-400 hidden"><i class="fas fa-chevron-down"></i></button>
+            </h2>
+            
+            <div id="form-body">
+                <div id="user-info" class="bg-cyan-50 p-3 rounded-lg mb-4 text-sm text-cyan-900 shadow-inner hidden"></div>
+                
+                <form id="regForm" onsubmit="submitForm(event)">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">1. ความประสงค์เข้าร่วมกิจกรรม <span class="text-red-500">*</span></label>
+                        <select id="attend" required class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-cyan-500 focus:border-cyan-500 p-2 border" onchange="toggleFormRequirements()">
+                            <option value="">-- กรุณาเลือก --</option>
+                            <option value="Y">เข้าร่วมกิจกรรม</option>
+                            <option value="N">ไม่เข้าร่วม</option>
+                        </select>
+                    </div>
 
-    <div id="pairingUI" class="hidden space-y-4">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-lg font-bold text-sky-800">จัดการห้องพัก (จับคู่นอน)</h2>
-        <button onclick="goBackToReg()" class="text-xs bg-gray-200 px-2 py-1 rounded">กลับไปแก้ข้อมูล</button>
-      </div>
+                    <div id="dynamic-fields">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">2. การเดินทาง <span class="text-red-500">*</span></label>
+                            <div class="grid grid-cols-2 gap-2 text-sm">
+                                <div>
+                                    <span class="block mb-1 text-xs text-gray-500">ขาไป</span>
+                                    <select id="travelGo" class="w-full border-gray-300 rounded-lg shadow-sm p-2 border">
+                                        <option value="">-- เลือก --</option>
+                                        <option value="ส่วนตัว">รถยนต์ส่วนบุคคล</option>
+                                        <option value="กรมจัดให้">รถกรมจัดหาให้</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <span class="block mb-1 text-xs text-gray-500">ขากลับ</span>
+                                    <select id="travelReturn" class="w-full border-gray-300 rounded-lg shadow-sm p-2 border">
+                                        <option value="">-- เลือก --</option>
+                                        <option value="ส่วนตัว">รถยนต์ส่วนบุคคล</option>
+                                        <option value="กรมจัดให้">รถกรมจัดหาให้</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
 
-      <div id="pairStatusBox" class="p-4 rounded-lg text-center mb-4 border"></div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">3. การแพ้อาหาร <span class="text-red-500">*</span></label>
+                            <select id="allergy" class="w-full border-gray-300 rounded-lg shadow-sm p-2 border" onchange="toggleBox('allergy', 'allergyBox')">
+                                <option value="">-- กรุณาเลือก --</option>
+                                <option value="ไม่แพ้">ไม่แพ้</option>
+                                <option value="แพ้">แพ้ (โปรดระบุ)</option>
+                            </select>
+                            <input type="text" id="allergyBox" class="mt-2 w-full border-gray-300 rounded-lg shadow-sm p-2 border hidden" placeholder="ระบุสิ่งที่แพ้">
+                        </div>
 
-      <div id="pairActionArea">
-        <div class="mb-4">
-          <label class="block text-sm font-medium mb-1">ค้นหาคู่ห้องพัก</label>
-          <div class="flex gap-2">
-            <input type="text" id="searchPartner" class="input-field text-sm" placeholder="พิมพ์ชื่อเพื่อค้นหา...">
-          </div>
-          <p class="text-xs text-gray-500 mt-1 italic">หากไม่พบชื่อ บุคคลนั้นอาจยังไม่ลงทะเบียน ไม่เข้าร่วม หรือมีคู่แล้ว</p>
-          <ul id="partnerList" class="mt-2 space-y-1 max-h-40 overflow-y-auto bg-white border border-gray-200 rounded-md hidden"></ul>
-        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">4. ข้อมูลอาหาร <span class="text-red-500">*</span></label>
+                            <select id="foodType" class="w-full border-gray-300 rounded-lg shadow-sm p-2 border" onchange="toggleBox('foodType', 'foodBox', 'อื่น ๆ')">
+                                <option value="">-- กรุณาเลือก --</option>
+                                <option value="ทานได้ทุกอย่าง">ทานได้ทุกอย่าง</option>
+                                <option value="อิสลาม">อิสลาม</option>
+                                <option value="มังสวิรัติ">มังสวิรัติ</option>
+                                <option value="อื่น ๆ">อื่น ๆ (โปรดระบุ)</option>
+                            </select>
+                            <input type="text" id="foodBox" class="mt-2 w-full border-gray-300 rounded-lg shadow-sm p-2 border hidden" placeholder="ระบุข้อมูลอาหาร">
+                        </div>
 
-        <div id="requestsToMe" class="hidden">
-          <h3 class="text-sm font-bold text-sky-700 mb-2">คำขอจับคู่ถึงคุณ:</h3>
-          <div id="reqList" class="space-y-2"></div>
-        </div>
-      </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">5. เบอร์โทรศัพท์ <span class="text-red-500">*</span></label>
+                            <input type="tel" id="phone" class="w-full border-gray-300 rounded-lg shadow-sm p-2 border" placeholder="08XXXXXXXX" maxlength="10">
+                        </div>
+                    </div> <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">6. ข้อมูลเพิ่มเติม (ถ้ามี)</label>
+                        <textarea id="note" class="w-full border-gray-300 rounded-lg shadow-sm p-2 border" rows="2"></textarea>
+                    </div>
 
-    </div>
-
-  </div>
-
-  <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbz4SW3PjipqUdAMCj-IbqJhxTzUPyKq-Qa_5dkserHvu28bIFdFmHmeD5ReDtkjDaqc/exec";
-    const LIFF_ID = "2010492833-vdob7H57";
-    
-    let userUid = "";
-    let userDbInfo = null;
-    let pollingInterval = null;
-
-    // --- LIFF & INIT ---
-    async function init() {
-      try {
-        await liff.init({ liffId: LIFF_ID });
-        if (!liff.isLoggedIn()) {
-          liff.login();
-        } else {
-          const profile = await liff.getProfile();
-          userUid = profile.userId;
-          checkUserStatus();
-        }
-      } catch (err) {
-        Swal.fire('Error', 'ไม่สามารถเชื่อมต่อ LINE ได้', 'error');
-      }
-    }
-    init();
-
-    // --- API Calls ---
-    async function callGAS(payload) {
-      try {
-        const response = await fetch(GAS_URL, {
-          method: 'POST',
-          body: JSON.stringify(payload)
-        });
-        const text = await response.text();
-        return JSON.parse(text);
-      } catch (error) {
-        console.error(error);
-        return { status: 'error', message: 'Network error' };
-      }
-    }
-
-    // --- UI Logic ---
-    function showUI(id) {
-      ['loadingUI', 'checkIdUI', 'registerUI', 'pairingUI'].forEach(el => document.getElementById(el).classList.add('hidden'));
-      document.getElementById(id).classList.remove('hidden');
-    }
-
-    async function checkUserStatus() {
-      const res = await callGAS({ action: "checkUser", uid: userUid });
-      if (res.status === "success") {
-        if (res.isRegistered) {
-          userDbInfo = res.dbData;
-          populateForm(res.userData, res.dbData);
-          showUI('registerUI');
-          Swal.fire({ title: 'พบข้อมูล', text: 'คุณได้ลงทะเบียนไว้แล้ว สามารถแก้ไขข้อมูลได้', icon: 'info', timer: 1500, showConfirmButton: false });
-          document.getElementById('btnGoPairing').classList.remove('hidden');
-        } else {
-          showUI('checkIdUI');
-        }
-      } else {
-        Swal.fire('Error', 'เกิดข้อผิดพลาดในการตรวจสอบข้อมูล', 'error');
-      }
-    }
-
-    // --- Helpers ---
-    function formatIdCard(input) {
-      let v = input.value.replace(/\D/g, '');
-      if (v.length > 13) v = v.slice(0, 13);
-      let formatted = '';
-      for (let i = 0; i < v.length; i++) {
-        if (i === 1 || i === 5 || i === 10 || i === 12) formatted += '-';
-        formatted += v[i];
-      }
-      input.value = formatted;
-    }
-
-    async function verifyIdCard() {
-      const idCard = document.getElementById('idCardInput').value;
-      if (idCard.length !== 17) return Swal.fire('แจ้งเตือน', 'กรุณากรอกเลขบัตร 13 หลักให้ครบ', 'warning');
-      
-      document.getElementById('loadingText').innerText = "กำลังตรวจสอบฐานข้อมูล...";
-      showUI('loadingUI');
-
-      const res = await callGAS({ action: "verifyID", idCard: idCard, uid: userUid });
-      if (res.status === "success") {
-        userDbInfo = res.data;
-        userDbInfo.idCard = idCard;
-        document.getElementById('userInfoDisplay').innerText = `ผู้ลงทะเบียน: ${res.data.title}${res.data.fname} ${res.data.lname}\nตำแหน่ง: ${res.data.position} (${res.data.dept})`;
-        showUI('registerUI');
-      } else {
-        Swal.fire('ไม่พบข้อมูล', 'ไม่พบหมายเลขบัตรประชาชนนี้ในฐานข้อมูล', 'error');
-        showUI('checkIdUI');
-      }
-    }
-
-    // --- Form Logic ---
-    function toggleFormFields() {
-      const attend = document.getElementById('attend').value;
-      const fullForm = document.getElementById('fullFormFields');
-      if(attend === 'Y') {
-        fullForm.classList.remove('hidden');
-        ['goTravel', 'returnTravel', 'allergySelect', 'foodSelect', 'phone'].forEach(id => document.getElementById(id).required = true);
-      } else {
-        fullForm.classList.add('hidden');
-        ['goTravel', 'returnTravel', 'allergySelect', 'foodSelect', 'phone'].forEach(id => document.getElementById(id).required = false);
-      }
-    }
-
-    function checkAllergy() {
-      const v = document.getElementById('allergySelect').value;
-      const el = document.getElementById('allergyDetail');
-      if (v === 'แพ้') { el.classList.remove('hidden'); el.required = true; } 
-      else { el.classList.add('hidden'); el.required = false; }
-    }
-
-    function checkFood() {
-      const v = document.getElementById('foodSelect').value;
-      const el = document.getElementById('foodDetail');
-      if (v === 'อื่น ๆ') { el.classList.remove('hidden'); el.required = true; } 
-      else { el.classList.add('hidden'); el.required = false; }
-    }
-
-    function populateForm(uData, dbData) {
-      document.getElementById('userInfoDisplay').innerText = `ผู้ลงทะเบียน: ${dbData.title}${dbData.fname} ${dbData.lname}\nตำแหน่ง: ${dbData.position} (${dbData.dept})`;
-      document.getElementById('attend').value = uData.attend;
-      toggleFormFields();
-      if(uData.attend === 'Y') {
-        document.getElementById('goTravel').value = uData.goTravel;
-        document.getElementById('returnTravel').value = uData.retTravel;
-        document.getElementById('allergySelect').value = uData.allergy.startsWith('แพ้:') ? 'แพ้' : uData.allergy;
-        checkAllergy();
-        if(uData.allergy.startsWith('แพ้:')) document.getElementById('allergyDetail').value = uData.allergy.split(':')[1];
-        
-        let foodBase = ['ทานได้ทุกอย่าง', 'อิสลาม', 'มังสวิรัติ'].includes(uData.food) ? uData.food : 'อื่น ๆ';
-        document.getElementById('foodSelect').value = foodBase;
-        checkFood();
-        if(foodBase === 'อื่น ๆ') document.getElementById('foodDetail').value = uData.food;
-
-        document.getElementById('phone').value = uData.phone;
-        document.getElementById('note').value = uData.note;
-      }
-    }
-
-    async function submitRegistration(e) {
-      e.preventDefault();
-      
-      const attend = document.getElementById('attend').value;
-      // Warning if change to N
-      if (attend === 'N' && document.getElementById('btnGoPairing').classList.contains('hidden') === false) {
-         const confirm = await Swal.fire({
-           title: 'ยืนยันการยกเลิก?',
-           text: 'การเปลี่ยนสถานะเป็น "ไม่เข้าร่วม" ระบบจะยกเลิกการจับคู่นอนของคุณทั้งหมด ยืนยันหรือไม่?',
-           icon: 'warning', showCancelButton: true, confirmButtonText: 'ยืนยัน', cancelButtonText: 'กลับไปแก้ไข'
-         });
-         if(!confirm.isConfirmed) return;
-         await callGAS({ action: "cancelAttend", uid: userUid });
-      }
-
-      const allergyVal = document.getElementById('allergySelect').value === 'แพ้' ? 'แพ้:' + document.getElementById('allergyDetail').value : 'ไม่แพ้';
-      const foodVal = document.getElementById('foodSelect').value === 'อื่น ๆ' ? document.getElementById('foodDetail').value : document.getElementById('foodSelect').value;
-
-      const data = {
-        idCard: userDbInfo.idCard,
-        attend: attend,
-        goTravel: document.getElementById('goTravel').value,
-        returnTravel: document.getElementById('returnTravel').value,
-        allergy: allergyVal, food: foodVal,
-        phone: document.getElementById('phone').value,
-        note: document.getElementById('note').value
-      };
-
-      Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
-      const res = await callGAS({ action: "register", uid: userUid, data: data });
-      
-      if(res.status === 'success') {
-        Swal.fire('สำเร็จ', 'บันทึกข้อมูลเรียบร้อย', 'success');
-        document.getElementById('btnGoPairing').classList.remove('hidden');
-        if(attend === 'Y') goToPairing();
-      } else {
-        Swal.fire('ล้มเหลว', res.message, 'error');
-      }
-    }
-
-    // --- Pairing Logic (Step 2) ---
-    function goBackToReg() {
-      clearInterval(pollingInterval);
-      showUI('registerUI');
-    }
-
-    function goToPairing() {
-      if (userDbInfo && userDbInfo.single === 'Y') {
-        Swal.fire('ข้อมูลห้องพัก', 'ท่านได้รับสิทธิ์ห้องพักเดี่ยว ไม่ต้องดำเนินการจับคู่', 'info');
-        return;
-      }
-      showUI('pairingUI');
-      loadPairingData();
-      // Polling for real-time feel
-      pollingInterval = setInterval(loadPairingData, 5000); 
-    }
-
-    let currentAvailableUsers = [];
-
-    async function loadPairingData() {
-      const res = await callGAS({ action: "getPairingData", uid: userUid });
-      if(res.status !== "success") return;
-
-      const statusBox = document.getElementById('pairStatusBox');
-      const actionArea = document.getElementById('pairActionArea');
-      currentAvailableUsers = res.availableUsers;
-
-      if (res.matchedWith) {
-        statusBox.className = "p-4 rounded-lg text-center mb-4 border bg-green-50 border-green-200";
-        statusBox.innerHTML = `<p class="text-green-800 font-bold">🎉 จับคู่สำเร็จ</p><p class="text-sm">คู่ของคุณคือ: <b>${res.matchedWith}</b></p>`;
-        actionArea.classList.add('hidden');
-      } else if (res.myRequest) {
-        statusBox.className = "p-4 rounded-lg text-center mb-4 border bg-orange-50 border-orange-200";
-        statusBox.innerHTML = `<p class="text-orange-800 font-bold">⏳ รอการตอบรับ</p><p class="text-sm">คุณส่งคำขอไปยัง: <b>${res.myRequest.name}</b></p>`;
-        actionArea.classList.add('hidden');
-      } else {
-        statusBox.className = "p-4 rounded-lg text-center mb-4 border bg-sky-50 border-sky-200";
-        statusBox.innerHTML = `<p class="text-sky-800">กรุณาเลือกคู่ห้องพัก</p>`;
-        actionArea.classList.remove('hidden');
-      }
-
-      // Render Requests to me
-      const reqList = document.getElementById('reqList');
-      const reqContainer = document.getElementById('requestsToMe');
-      if (res.pendingRequests && res.pendingRequests.length > 0 && !res.matchedWith) {
-        reqContainer.classList.remove('hidden');
-        reqList.innerHTML = res.pendingRequests.map(p => `
-          <div class="flex justify-between items-center p-2 bg-white border rounded shadow-sm text-sm">
-            <span><b>${p.name}</b> ขอจับคู่กับคุณ</span>
-            <div>
-              <button onclick="respondPair('${p.reqId}', 'Matched')" class="bg-green-500 text-white px-2 py-1 rounded text-xs">รับ</button>
-              <button onclick="respondPair('${p.reqId}', 'Rejected')" class="bg-red-500 text-white px-2 py-1 rounded text-xs">ปฏิเสธ</button>
+                    <button type="submit" class="w-full bg-cyan-600 text-white font-bold py-3 rounded-xl shadow hover:bg-cyan-700 transition">
+                        <i class="fas fa-save mr-1"></i> บันทึกข้อมูล
+                    </button>
+                </form>
             </div>
-          </div>
-        `).join('');
-      } else {
-        reqContainer.classList.add('hidden');
-      }
+        </div>
+
+        <div id="step-2" class="bg-white rounded-2xl shadow-lg p-5 border-t-4 border-indigo-500 hidden">
+            <h2 class="text-lg font-bold text-indigo-800 mb-4"><i class="fas fa-bed text-indigo-500 mr-2"></i> Step 2: จับคู่นอนห้องพัก</h2>
+            
+            <div id="match-status" class="bg-indigo-50 p-4 rounded-lg mb-4 text-center hidden border border-indigo-100">
+                </div>
+
+            <div id="pair-action-area">
+                <label class="block text-sm font-medium text-gray-700 mb-1">ค้นหารายชื่อเพื่อนที่ต้องการจับคู่</label>
+                <div class="flex space-x-2 mb-2">
+                    <input type="text" id="searchName" class="w-full border-gray-300 rounded-lg p-2 border" placeholder="พิมพ์ชื่อเพื่อค้นหา...">
+                    <button type="button" onclick="searchUser()" class="bg-indigo-500 text-white px-4 rounded-lg"><i class="fas fa-search"></i></button>
+                </div>
+                <p class="text-xs text-gray-500 mb-4">* หากรายชื่อไม่ปรากฏ บุคคลที่ท่านกำลังค้นหาอาจยังไม่ลงทะเบียน ไม่เข้าร่วมกิจกรรมนี้ หรือจับคู่นอนไปเรียบร้อยแล้ว</p>
+                <ul id="search-results" class="bg-white border rounded-lg divide-y hidden"></ul>
+            </div>
+            
+            <div id="incoming-requests" class="mt-6 hidden">
+                <h3 class="text-sm font-bold text-gray-700 mb-2 border-b pb-1">มีผู้ขอจับคู่กับคุณ</h3>
+                <ul id="req-list" class="space-y-2"></ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Config
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbz4SW3PjipqUdAMCj-IbqJhxTzUPyKq-Qa_5dkserHvu28bIFdFmHmeD5ReDtkjDaqc/exec';
+    const LIFF_ID = '2010492833-vdob7H57';
+    
+    // State
+    let userUid = '';
+    let userData = {};
+    let isSingleRoom = 'N';
+    let fullNameStr = '';
+    let pollingInterval;
+
+    // 1. Initialize LIFF
+    async function init() {
+        try {
+            await liff.init({ liffId: LIFF_ID });
+            if (liff.isLoggedIn()) {
+                const profile = await liff.getProfile();
+                userUid = profile.userId;
+                checkRegistration();
+            } else {
+                liff.login();
+            }
+        } catch (err) {
+            Swal.fire('Error', 'ไม่สามารถเชื่อมต่อ LIFF ได้', 'error');
+        }
     }
 
-    // Search Logic
-    document.getElementById('searchPartner').addEventListener('input', function(e) {
-      const q = e.target.value.trim();
-      const list = document.getElementById('partnerList');
-      if(q.length === 0) { list.classList.add('hidden'); return; }
-
-      const filtered = currentAvailableUsers.filter(u => u.name.includes(q));
-      if(filtered.length > 0) {
-        list.innerHTML = filtered.map(u => `
-          <li class="p-2 border-b text-sm flex justify-between items-center hover:bg-sky-50">
-            <span>${u.name} <br><span class="text-xs text-gray-500">${u.dept}</span></span>
-            <button onclick="requestPair('${u.uid}')" class="bg-sky-600 text-white px-3 py-1 rounded text-xs">ส่งคำขอ</button>
-          </li>
-        `).join('');
-        list.classList.remove('hidden');
-      } else {
-        list.innerHTML = `<li class="p-2 text-xs text-red-500 text-center">ไม่พบข้อมูล</li>`;
-        list.classList.remove('hidden');
-      }
-    });
-
-    async function requestPair(targetUid) {
-      Swal.fire({ title: 'กำลังส่งคำขอ...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
-      await callGAS({ action: "requestPair", uid: userUid, targetUid: targetUid });
-      document.getElementById('searchPartner').value = '';
-      document.getElementById('partnerList').classList.add('hidden');
-      Swal.close();
-      loadPairingData();
+    // 2. API Helper
+    async function callGAS(payload) {
+        const response = await fetch(GAS_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
+        return await response.json();
     }
 
-    async function respondPair(reqId, response) {
-      Swal.fire({ title: 'กำลังดำเนินการ...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
-      await callGAS({ action: "respondPair", uid: userUid, reqId: reqId, response: response });
-      Swal.close();
-      loadPairingData();
+    // 3. Check System / Registration
+    async function checkRegistration() {
+        Swal.showLoading();
+        const res = await callGAS({ action: 'checkUser', uid: userUid });
+        Swal.close();
+
+        if(!res.data.timeCheck.isOpen) {
+            Swal.fire('แจ้งเตือน', res.data.timeCheck.message, 'warning');
+            return;
+        }
+
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('main-content').classList.remove('hidden');
+
+        if (res.data.registered) {
+            // โหลดข้อมูลเก่ามาใส่ฟอร์ม
+            let d = res.data.data;
+            isSingleRoom = res.data.singleRoom;
+            fullNameStr = d[3];
+            
+            document.getElementById('user-info').innerHTML = `<b>ข้อมูลของคุณ:</b> ${fullNameStr}<br>สถานะ: ลงทะเบียนแล้ว (แก้ไขได้)`;
+            document.getElementById('user-info').classList.remove('hidden');
+
+            document.getElementById('attend').value = d[4];
+            document.getElementById('travelGo').value = d[5];
+            document.getElementById('travelReturn').value = d[6];
+            document.getElementById('allergy').value = d[7];
+            document.getElementById('allergyBox').value = d[8] || '';
+            document.getElementById('foodType').value = d[9];
+            document.getElementById('foodBox').value = d[10] || '';
+            document.getElementById('phone').value = d[11] ? d[11].replace(/'/g, '') : '';
+            document.getElementById('note').value = d[12] || '';
+            
+            toggleFormRequirements();
+            toggleBox('allergy', 'allergyBox');
+            toggleBox('foodType', 'foodBox', 'อื่น ๆ');
+
+            checkStep2Logic();
+        } else {
+            promptIDCard();
+        }
     }
 
-  </script>
+    // 4. ID Card Mask & Validation
+    function promptIDCard() {
+        Swal.fire({
+            title: 'ตรวจสอบสิทธิ์',
+            html: '<p class="text-sm mb-2 text-gray-600">กรุณากรอกเลขบัตรประชาชน 13 หลัก</p><input id="swal-id" class="swal2-input text-center" placeholder="X-XXXX-XXXXX-XX-X" maxlength="17">',
+            confirmButtonText: 'ตรวจสอบ',
+            allowOutsideClick: false,
+            didOpen: () => {
+                const input = document.getElementById('swal-id');
+                input.addEventListener('input', function(e) {
+                    let x = e.target.value.replace(/\D/g, '').match(/(\d{0,1})(\d{0,4})(\d{0,5})(\d{0,2})(\d{0,1})/);
+                    e.target.value = !x[2] ? x[1] : x[1] + '-' + x[2] + (x[3] ? '-' + x[3] : '') + (x[4] ? '-' + x[4] : '') + (x[5] ? '-' + x[5] : '');
+                });
+            },
+            preConfirm: () => {
+                return document.getElementById('swal-id').value;
+            }
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                Swal.showLoading();
+                const res = await callGAS({ action: 'validateID', idCard: result.value, uid: userUid });
+                if (res.data.found) {
+                    let info = res.data.info;
+                    userData.idCard = result.value;
+                    fullNameStr = `${info.prefix}${info.fname} ${info.lname}`;
+                    isSingleRoom = info.single;
+                    
+                    document.getElementById('user-info').innerHTML = `<b>ยืนยันตัวตนสำเร็จ:</b> ${fullNameStr}<br>ตำแหน่ง: ${info.pos} | สังกัด: ${info.dept}`;
+                    document.getElementById('user-info').classList.remove('hidden');
+                    Swal.fire('สำเร็จ', 'ตรวจสอบพบข้อมูลในระบบ', 'success');
+                } else {
+                    Swal.fire('ไม่พบข้อมูล', 'กรุณาติดต่อเจ้าหน้าที่', 'error').then(() => promptIDCard());
+                }
+            }
+        });
+    }
+
+    // 5. Form Interactions
+    function toggleFormRequirements() {
+        const attend = document.getElementById('attend').value;
+        const dynFields = document.getElementById('dynamic-fields');
+        const reqFields = ['travelGo', 'travelReturn', 'allergy', 'foodType', 'phone'];
+        
+        if (attend === 'N') {
+            dynFields.classList.add('hidden');
+            reqFields.forEach(id => document.getElementById(id).removeAttribute('required'));
+            if(isSingleRoom === 'N') document.getElementById('step-2').classList.add('hidden'); // ซ่อน step 2 ถ้ายกเลิก
+        } else {
+            dynFields.classList.remove('hidden');
+            reqFields.forEach(id => document.getElementById(id).setAttribute('required', 'required'));
+            checkStep2Logic();
+        }
+    }
+
+    function toggleBox(selectId, boxId, targetValue = 'แพ้') {
+        const val = document.getElementById(selectId).value;
+        const box = document.getElementById(boxId);
+        if (val === targetValue) { box.classList.remove('hidden'); box.setAttribute('required', 'required'); } 
+        else { box.classList.add('hidden'); box.removeAttribute('required'); box.value = ''; }
+    }
+
+    // 6. Submit Data
+    async function submitForm(e) {
+        e.preventDefault();
+        
+        // แจ้งเตือนถ้ายกเลิกการเข้าร่วม
+        const isAttend = document.getElementById('attend').value === 'Y';
+        if(!isAttend) {
+            const confirm = await Swal.fire({
+                title: 'ยืนยันการไม่เข้าร่วม?',
+                text: "หากคุณมีคู่จับนอนแล้ว การจับคู่จะถูกยกเลิกด้วย",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'ยืนยัน'
+            });
+            if(!confirm.isConfirmed) return;
+        }
+
+        const data = {
+            uid: userUid,
+            idCard: userData.idCard || '',
+            fullName: fullNameStr,
+            attend: document.getElementById('attend').value,
+            travelGo: document.getElementById('travelGo').value,
+            travelReturn: document.getElementById('travelReturn').value,
+            allergy: document.getElementById('allergy').value,
+            allergyDesc: document.getElementById('allergyBox').value,
+            foodType: document.getElementById('foodType').value,
+            foodDesc: document.getElementById('foodBox').value,
+            phone: document.getElementById('phone').value,
+            note: document.getElementById('note').value
+        };
+
+        Swal.fire({title: 'กำลังบันทึก...', allowOutsideClick: false});
+        Swal.showLoading();
+        
+        const res = await callGAS({ action: 'saveRegister', data: data });
+        if(res.success) {
+            Swal.fire('สำเร็จ', 'บันทึกข้อมูลเรียบร้อยแล้ว', 'success');
+            // ยุบ Form 1
+            document.getElementById('form-body').classList.add('hidden');
+            document.getElementById('toggle-step1').classList.remove('hidden');
+            document.getElementById('toggle-step1').onclick = () => document.getElementById('form-body').classList.toggle('hidden');
+            
+            checkStep2Logic();
+        }
+    }
+
+    // 7. Step 2 Logic
+    function checkStep2Logic() {
+        const attend = document.getElementById('attend').value;
+        if(attend === 'Y' && isSingleRoom === 'N') {
+            document.getElementById('step-2').classList.remove('hidden');
+            startPairingPolling();
+        } else {
+            document.getElementById('step-2').classList.add('hidden');
+            stopPairingPolling();
+        }
+    }
+
+    // 8. Pairing System
+    async function searchUser() {
+        const keyword = document.getElementById('searchName').value.trim();
+        if(!keyword) return;
+        
+        Swal.showLoading();
+        const res = await callGAS({ action: 'searchPair', keyword: keyword, uid: userUid });
+        Swal.close();
+        
+        const ul = document.getElementById('search-results');
+        ul.innerHTML = '';
+        if(res.data.length === 0) {
+            ul.innerHTML = '<li class="p-3 text-center text-sm text-gray-500">ไม่พบรายชื่อที่สามารถจับคู่ได้</li>';
+        } else {
+            res.data.forEach(user => {
+                ul.innerHTML += `<li class="p-3 flex justify-between items-center text-sm">
+                    <span>${user.name}</span>
+                    <button onclick="requestPair('${user.uid}', '${user.name}')" class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded hover:bg-indigo-200">ขอจับคู่</button>
+                </li>`;
+            });
+        }
+        ul.classList.remove('hidden');
+    }
+
+    async function requestPair(targetUid, name) {
+        const conf = await Swal.fire({ text: `ส่งคำขอจับคู่ถึง ${name}?`, showCancelButton: true });
+        if(conf.isConfirmed) {
+            Swal.showLoading();
+            await callGAS({ action: 'requestPair', myUid: userUid, targetUid: targetUid });
+            Swal.fire('สำเร็จ', 'ส่งคำขอแล้ว กรุณารอการตอบรับ', 'success');
+            document.getElementById('search-results').classList.add('hidden');
+            fetchPairStatus();
+        }
+    }
+
+    async function respondPair(targetUid, status) {
+        Swal.showLoading();
+        await callGAS({ action: 'respondPair', myUid: userUid, targetUid: targetUid, responseStatus: status });
+        Swal.close();
+        fetchPairStatus();
+    }
+
+    // Real-time Polling
+    function startPairingPolling() {
+        fetchPairStatus();
+        if(!pollingInterval) pollingInterval = setInterval(fetchPairStatus, 10000); // Check every 10s
+    }
+    function stopPairingPolling() {
+        if(pollingInterval) clearInterval(pollingInterval);
+    }
+
+    async function fetchPairStatus() {
+        const res = await callGAS({ action: 'getPairStatus', uid: userUid });
+        const data = res.data;
+        const statusBox = document.getElementById('match-status');
+        const actionArea = document.getElementById('pair-action-area');
+        const reqArea = document.getElementById('incoming-requests');
+        const reqList = document.getElementById('req-list');
+
+        if(data.matched) {
+            statusBox.innerHTML = `<i class="fas fa-check-circle text-green-500 text-3xl mb-2"></i><br><b class="text-green-700">จับคู่สำเร็จ</b><br>รูมเมทของคุณคือ: ${data.matched.partnerName}`;
+            statusBox.classList.remove('hidden');
+            actionArea.classList.add('hidden');
+            reqArea.classList.add('hidden');
+        } else {
+            statusBox.classList.add('hidden');
+            actionArea.classList.remove('hidden');
+            
+            // Pending I sent
+            if(data.myRequests.length > 0) {
+                statusBox.innerHTML = `<i class="fas fa-hourglass-half text-orange-500 text-3xl mb-2"></i><br><span class="text-orange-700">รอการตอบรับจาก: ${data.myRequests.map(r=>r.name).join(', ')}</span>`;
+                statusBox.classList.remove('hidden');
+            }
+
+            // Incoming requests
+            if(data.incomingRequests.length > 0) {
+                reqArea.classList.remove('hidden');
+                reqList.innerHTML = '';
+                data.incomingRequests.forEach(req => {
+                    reqList.innerHTML += `<li class="bg-indigo-50 border p-3 rounded-lg flex justify-between items-center shadow-sm">
+                        <span class="text-sm font-medium">${req.name}</span>
+                        <div class="space-x-1">
+                            <button onclick="respondPair('${req.uid}', 'Accepted')" class="bg-green-500 text-white px-2 py-1 rounded text-xs"><i class="fas fa-check"></i> รับ</button>
+                            <button onclick="respondPair('${req.uid}', 'Rejected')" class="bg-red-500 text-white px-2 py-1 rounded text-xs"><i class="fas fa-times"></i> ปฏิเสธ</button>
+                        </div>
+                    </li>`;
+                });
+            } else {
+                reqArea.classList.add('hidden');
+            }
+        }
+    }
+
+    // Start App
+    window.onload = init;
+</script>
 </body>
 </html>
