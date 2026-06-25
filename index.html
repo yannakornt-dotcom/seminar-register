@@ -3,565 +3,232 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ลงทะเบียนสัมมนา กรมทรัพยากรน้ำ</title>
-  <!-- Google Font: Sarabun -->
-  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;700&display=swap" rel="stylesheet">
-  <!-- SweetAlert2 -->
+  <title>ลงทะเบียนสัมมนา - กรมทรัพยากรน้ำ</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
   <style>
-    * { font-family: 'Sarabun', sans-serif; box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: linear-gradient(135deg, #E0F7FA 0%, #B2EBF2 100%);
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      padding: 20px;
-    }
-    .container {
-      max-width: 500px;
-      width: 100%;
-      background: white;
-      border-radius: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-      overflow: hidden;
-    }
-    .header {
-      background: linear-gradient(135deg, #0277BD, #0288D1);
-      padding: 20px;
-      text-align: center;
-      position: relative;
-    }
-    .header img { max-width: 80px; margin-bottom: 10px; }
-    .header h1 { color: white; font-size: 1.4em; font-weight: 700; }
-    .wave {
-      position: absolute;
-      bottom: -10px;
-      left: 0;
-      width: 100%;
-      height: 30px;
-      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="white" d="M0,160L48,176C96,192,192,224,288,224C384,224,480,192,576,176C672,160,768,160,864,176C960,192,1056,224,1152,224C1248,224,1344,192,1392,176L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
-      background-size: cover;
-      background-repeat: no-repeat;
-      background-position: center;
-    }
-    .content { padding: 25px 20px 30px; }
-    .btn {
-      display: inline-block;
-      padding: 12px 25px;
-      background: #0277BD;
-      color: white;
-      border: none;
-      border-radius: 25px;
-      font-size: 1em;
-      cursor: pointer;
-      font-weight: 700;
-      transition: 0.3s;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-      margin-top: 10px;
-    }
-    .btn:hover { background: #01579B; transform: translateY(-2px); }
-    .btn:disabled { background: #B0BEC5; cursor: not-allowed; }
-    input, select, textarea {
-      width: 100%;
-      padding: 10px 15px;
-      margin: 8px 0 15px;
-      border: 2px solid #B3E5FC;
-      border-radius: 10px;
-      font-size: 1em;
-      transition: border 0.3s;
-    }
-    input:focus, select:focus { border-color: #0288D1; outline: none; }
-    .form-group { margin-bottom: 5px; }
-    label { font-weight: 700; color: #01579B; display: block; margin-bottom: 2px; }
-    .card {
-      background: #F1F8E9;
-      padding: 15px;
-      border-radius: 15px;
-      margin: 15px 0;
-      border-left: 5px solid #0277BD;
-    }
-    .hidden { display: none; }
-    .pair-item {
-      background: white;
-      padding: 10px;
-      border-radius: 10px;
-      margin: 5px 0;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-      cursor: pointer;
-      transition: 0.2s;
-    }
-    .pair-item:hover { background: #E1F5FE; }
+    body { font-family: 'Sarabun', sans-serif; background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); min-height: 100vh; }
+    .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(3, 105, 161, 0.1); }
   </style>
 </head>
-<body>
-<div class="container">
-  <div class="header">
-    <img src="https://dwr.go.th/uploads/userfiles/images/Logodwr.png" alt="DWR Logo">
-    <h1>ลงทะเบียนสัมมนา</h1>
-    <div class="wave"></div>
-  </div>
-  <div class="content" id="app">
-    <!-- เนื้อหาจะถูกสร้างด้วย JS -->
-  </div>
-</div>
+<body class="p-4 flex flex-col items-center">
 
-<script src="https://static.line-scdn.net/liff/edge/versions/2/sdk.js"></script>
-<script>
-  // ============ ตัวแปร global ============
-  let liffReady = false;
-  let profile = null;
-  let currentUserData = null; // ข้อมูลจาก register
-  let timeStatus = {};
-  let isEditMode = false;
+  <div class="glass-card w-full max-w-md p-6 rounded-3xl mt-4">
+    <div class="text-center mb-6">
+      <img src="https://dwr.go.th/uploads/userfiles/images/Logodwr.png" alt="DWR" class="mx-auto h-20 drop-shadow-md">
+      <h2 class="text-xl font-bold text-cyan-800 mt-3">ลงทะเบียนร่วมงานสัมมนา</h2>
+      <p class="text-sm text-cyan-600">กรมทรัพยากรน้ำ</p>
+    </div>
 
-  // ฟังก์ชันเรียก server
-  function callServer(funcName, ...args) {
-    return new Promise((resolve, reject) => {
-      google.script.run
-        .withSuccessHandler(resolve)
-        .withFailureHandler(reject)
-        [funcName](...args);
-    });
-  }
+    <div id="loading" class="text-center py-10">
+      <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-cyan-700 mx-auto"></div>
+      <p class="mt-4 text-cyan-800">กำลังเชื่อมต่อระบบ...</p>
+    </div>
 
-  // ============ การเริ่มต้น ============
-  document.addEventListener('DOMContentLoaded', async () => {
-    // แสดง loading
-    Swal.fire({
-      title: 'กำลังโหลด...',
-      allowOutsideClick: false,
-      didOpen: () => Swal.showLoading()
-    });
-    try {
-      await liff.init({ liffId: '2010492833-vdob7H57' });
-      liffReady = true;
-      profile = await liff.getProfile();
-      console.log('LINE UID:', profile.userId);
+    <div id="step-idcard" class="hidden">
+      <p class="text-center text-red-500 text-sm mb-4">ไม่พบประวัติการลงทะเบียนของท่าน</p>
+      <label class="block text-sm font-semibold text-gray-700 mb-1">หมายเลขบัตรประชาชน (13 หลัก)</label>
+      <input type="text" id="idCardInput" placeholder="x-xxxx-xxxxx-xx-x" class="w-full border-2 border-cyan-200 rounded-xl p-3 text-center text-lg focus:border-cyan-500 outline-none transition" maxlength="17">
+      <button onclick="checkIdCard()" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 rounded-xl mt-4 shadow-lg transition">ค้นหาข้อมูล</button>
+    </div>
+
+    <div id="step-register" class="hidden space-y-4">
+      <div class="bg-cyan-50 p-4 rounded-xl border border-cyan-100">
+        <p class="text-sm text-gray-600">ข้อมูลจากฐานข้อมูล:</p>
+        <p id="profileDisplay" class="font-bold text-cyan-800 text-lg"></p>
+        <p id="deptDisplay" class="text-sm text-gray-700"></p>
+      </div>
+
+      <form id="regForm" class="space-y-4">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700">1. ความประสงค์เข้าร่วมกิจกรรม <span class="text-red-500">*</span></label>
+          <select id="joinStatus" required class="w-full border border-gray-300 rounded-lg p-2 mt-1">
+            <option value="">-- กรุณาเลือก --</option>
+            <option value="Y">เข้าร่วม</option>
+            <option value="N">ไม่เข้าร่วม</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-gray-700">2. การเดินทาง (ไป-กลับ) <span class="text-red-500">*</span></label>
+          <select id="transport" required class="w-full border border-gray-300 rounded-lg p-2 mt-1">
+            <option value="">-- กรุณาเลือก --</option>
+            <option value="รถส่วนตัว">รถยนต์ส่วนบุคคล</option>
+            <option value="รถส่วนกลาง">รถที่กรมจัดหาให้</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-gray-700">5. เบอร์โทรศัพท์มือถือ <span class="text-red-500">*</span></label>
+          <input type="tel" id="phone" required class="w-full border border-gray-300 rounded-lg p-2 mt-1" maxlength="10">
+        </div>
+
+        <button type="button" onclick="submitRegister()" class="w-full bg-cyan-600 text-white font-bold py-3 rounded-xl shadow-lg">บันทึกข้อมูลและถัดไป</button>
+      </form>
+    </div>
+
+    <div id="step-pairing" class="hidden">
+      <h3 class="font-bold text-lg text-cyan-800 border-b pb-2 mb-4">ระบบจัดการห้องพัก (จับคู่นอน)</h3>
       
-      // ดึงสถานะเวลา
-      timeStatus = await callServer('getTimeStatus');
+      <div id="pairingSearchArea">
+        <label class="block text-sm text-gray-700 mb-1">ค้นหาชื่อ-สกุล เพื่อนร่วมห้อง</label>
+        <div class="flex gap-2">
+          <input type="text" id="searchPartner" class="flex-1 border rounded-lg p-2" placeholder="พิมพ์ชื่อผู้ที่ลงทะเบียนแล้ว...">
+          <button onclick="searchPartner()" class="bg-cyan-500 text-white px-4 rounded-lg">ค้นหา</button>
+        </div>
+        <p class="text-xs text-red-400 mt-2">* หากไม่พบรายชื่อ บุคคลนั้นอาจยังไม่ลงทะเบียน ไม่เข้าร่วม หรือจับคู่แล้ว</p>
+      </div>
+
+      <div id="partnerResults" class="mt-4 space-y-2"></div>
       
-      // ตรวจสอบการลงทะเบียน
-      const regCheck = await callServer('checkRegistration', profile.userId);
+      <div class="mt-6">
+        <h4 class="font-bold text-sm text-gray-700">คำขอจับคู่ถึงคุณ (Requests)</h4>
+        <div id="incomingRequests" class="mt-2 text-sm text-gray-500">ไม่มีคำขอในขณะนี้...</div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ==========================================
+    // CONFIGURATION
+    // ==========================================
+    const LIFF_ID = "2010492833-vdob7H57";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbz4SW3PjipqUdAMCj-IbqJhxTzUPyKq-Qa_5dkserHvu28bIFdFmHmeD5ReDtkjDaqc/exec";
+    
+    let userLineUid = "";
+    let userInfo = {};
+
+    // 1. Initialize LIFF
+    async function main() {
+      await liff.init({ liffId: LIFF_ID });
+      if (!liff.isLoggedIn()) {
+        liff.login();
+        return;
+      }
+      const profile = await liff.getProfile();
+      userLineUid = profile.userId;
+      
+      // Call GAS API to check if registered
+      checkRegistrationStatus();
+    }
+    
+    main();
+
+    // 2. Fetch Helper Function (เชื่อม GAS)
+    async function callAPI(action, payload) {
+      payload.action = action;
+      payload.lineUid = userLineUid;
+      
+      const response = await fetch(GAS_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+      return await response.json();
+    }
+
+    // 3. Logic & State Management
+    async function checkRegistrationStatus() {
+      Swal.showLoading();
+      const res = await callAPI('checkUser', {});
       Swal.close();
-      
-      if (regCheck.found) {
-        currentUserData = regCheck.data;
-        // ตรวจสอบว่าอยู่ในช่วงแก้ไขหรือไม่
-        if (timeStatus.editOpen) {
-          isEditMode = true;
+
+      document.getElementById('loading').classList.add('hidden');
+
+      if (res.isRegistered) {
+        // ลงทะเบียนแล้ว -> ไปหน้าสรุป/แก้ไข หรือ หน้าจับคู่
+        if (res.userData.singleRoom === 'N') {
+            showStep('step-pairing');
+            // ฟังก์ชันตั้งเวลาดึงข้อมูล Request เรื่อยๆ (Polling)
+            setInterval(fetchRequests, 5000); 
+        } else {
+            Swal.fire('ข้อมูลครบถ้วน', 'คุณได้รับสิทธิ์นอนเดี่ยว ไม่ต้องทำการจับคู่', 'success');
         }
-        showSummaryPage();
       } else {
         // ยังไม่ลงทะเบียน
-        if (!timeStatus.registrationOpen) {
-          Swal.fire('ปิดรับลงทะเบียน', 'ขณะนี้ไม่อยู่ในช่วงเวลาลงทะเบียน', 'warning');
-          return;
-        }
-        showRegistrationPage();
+        showStep('step-idcard');
       }
-    } catch (err) {
+    }
+
+    // Script หน้ากากบัตรประชาชน (0-0000-00000-00-0)
+    document.getElementById('idCardInput').addEventListener('input', function (e) {
+      let x = e.target.value.replace(/\D/g, '').match(/(\d{0,1})(\d{0,4})(\d{0,5})(\d{0,2})(\d{0,1})/);
+      e.target.value = !x[2] ? x[1] : x[1] + '-' + x[2] + (x[3] ? '-' + x[3] : '') + (x[4] ? '-' + x[4] : '') + (x[5] ? '-' + x[5] : '');
+    });
+
+    async function checkIdCard() {
+      const idStr = document.getElementById('idCardInput').value;
+      if (idStr.length !== 17) return Swal.fire('แจ้งเตือน', 'กรุณากรอกบัตรประชาชนให้ครบถ้วน', 'warning');
+
+      Swal.showLoading();
+      const res = await callAPI('verifyIdCard', { idCard: idStr });
       Swal.close();
-      console.error(err);
-      Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อ LINE LIFF ได้', 'error');
-    }
-  });
 
-  // ============ หน้าแสดงสรุป / แก้ไข ============
-  function showSummaryPage() {
-    const app = document.getElementById('app');
-    const data = currentUserData;
-    app.innerHTML = `
-      <div class="card">
-        <h3>ข้อมูลการลงทะเบียน</h3>
-        <p><b>ชื่อ:</b> ${data.title}${data.name} ${data.surname}</p>
-        <p><b>ตำแหน่ง:</b> ${data.position}</p>
-        <p><b>สังกัด:</b> ${data.affiliation}</p>
-        <p><b>สิทธิ์นอนเดี่ยว:</b> ${data.single_room === 'Y' ? 'ใช่' : 'ไม่'}</p>
-        <p><b>เข้าร่วม:</b> ${data.participation === 'Y' ? 'เข้าร่วม' : 'ไม่เข้าร่วม'}</p>
-        <p><b>เดินทางไป:</b> ${data.travel_go}</p>
-        <p><b>เดินทางกลับ:</b> ${data.travel_return}</p>
-        <p><b>แพ้อาหาร:</b> ${data.food_allergy === 'Y' ? data.food_allergy_detail : 'ไม่'}</p>
-        <p><b>อาหาร:</b> ${data.food_preference}${data.food_preference_detail ? ' ('+data.food_preference_detail+')' : ''}</p>
-        <p><b>มือถือ:</b> ${data.mobile}</p>
-        <p><b>เพิ่มเติม:</b> ${data.additional_info || '-'}</p>
-      </div>
-      <div style="display:flex; gap:10px;">
-        ${isEditMode ? '<button class="btn" onclick="showEditForm()">แก้ไขข้อมูล</button>' : '<p style="color:red;">หมดเวลาแก้ไข</p>'}
-        <button class="btn" onclick="goToPairing()">จัดการห้องพัก</button>
-      </div>
-    `;
-  }
-
-  function showEditForm() {
-    const app = document.getElementById('app');
-    const d = currentUserData;
-    app.innerHTML = `
-      <h3 style="color:#01579B;">แก้ไขข้อมูล</h3>
-      <div class="form-group">
-        <label>เข้าร่วมกิจกรรม</label>
-        <select id="edit_participation">
-          <option value="">กรุณาเลือก</option>
-          <option value="Y" ${d.participation==='Y'?'selected':''}>เข้าร่วม</option>
-          <option value="N" ${d.participation==='N'?'selected':''}>ไม่เข้าร่วม</option>
-        </select>
-      </div>
-      <!-- ส่วนอื่น ๆ เหมือนฟอร์มลงทะเบียนย่อ ๆ -->
-      ${generateTravelFoodForm(d)}
-      <div class="form-group">
-        <label>มือถือ</label>
-        <input type="text" id="edit_mobile" value="${d.mobile.replace(/^'/,'')}">
-      </div>
-      <div class="form-group">
-        <label>ข้อมูลเพิ่มเติม</label>
-        <textarea id="edit_additional">${d.additional_info || ''}</textarea>
-      </div>
-      <button class="btn" onclick="saveEdit()">บันทึก</button>
-      <button class="btn" style="background:#78909C;" onclick="showSummaryPage()">ยกเลิก</button>
-    `;
-    // เพิ่ม event listeners สำหรับ food select
-    document.getElementById('edit_food_allergy').addEventListener('change', toggleAllergyDetail);
-    document.getElementById('edit_food_preference').addEventListener('change', toggleFoodPreferenceDetail);
-  }
-
-  function generateTravelFoodForm(data) {
-    return `
-      <div class="form-group">
-        <label>เดินทางไป</label>
-        <select id="edit_travel_go">
-          <option value="">กรุณาเลือก</option>
-          <option value="รถส่วนตัว" ${data.travel_go==='รถส่วนตัว'?'selected':''}>รถส่วนตัว</option>
-          <option value="รถกรม" ${data.travel_go==='รถกรม'?'selected':''}>รถกรม</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>เดินทางกลับ</label>
-        <select id="edit_travel_return">
-          <option value="">กรุณาเลือก</option>
-          <option value="รถส่วนตัว" ${data.travel_return==='รถส่วนตัว'?'selected':''}>รถส่วนตัว</option>
-          <option value="รถกรม" ${data.travel_return==='รถกรม'?'selected':''}>รถกรม</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>แพ้อาหาร</label>
-        <select id="edit_food_allergy">
-          <option value="">กรุณาเลือก</option>
-          <option value="N" ${data.food_allergy==='N'?'selected':''}>ไม่แพ้</option>
-          <option value="Y" ${data.food_allergy==='Y'?'selected':''}>แพ้</option>
-        </select>
-        <input type="text" id="edit_allergy_detail" placeholder="ระบุ" value="${data.food_allergy_detail||''}" style="${data.food_allergy==='Y'?'':'display:none'}">
-      </div>
-      <div class="form-group">
-        <label>อาหาร</label>
-        <select id="edit_food_preference">
-          <option value="">กรุณาเลือก</option>
-          <option value="ทานได้ทุกอย่าง" ${data.food_preference==='ทานได้ทุกอย่าง'?'selected':''}>ทานได้ทุกอย่าง</option>
-          <option value="อิสลาม" ${data.food_preference==='อิสลาม'?'selected':''}>อิสลาม</option>
-          <option value="มังสวิรัติ" ${data.food_preference==='มังสวิรัติ'?'selected':''}>มังสวิรัติ</option>
-          <option value="อื่น ๆ" ${data.food_preference==='อื่น ๆ'?'selected':''}>อื่น ๆ</option>
-        </select>
-        <input type="text" id="edit_food_pref_detail" placeholder="ระบุ" value="${data.food_preference_detail||''}" style="${data.food_preference==='อื่น ๆ'?'':'display:none'}">
-      </div>
-    `;
-  }
-
-  function toggleAllergyDetail() { /* แสดง/ซ่อน input */ }
-  function toggleFoodPreferenceDetail() { /* แสดง/ซ่อน input */ }
-
-  async function saveEdit() {
-    // ตรวจสอบ required fields
-    const participation = document.getElementById('edit_participation').value;
-    if (!participation) return Swal.fire('กรุณาเลือกการเข้าร่วม');
-    // ถ้าเปลี่ยนเป็นไม่เข้าร่วม ต้องเตือนเรื่องยกเลิกคู่
-    if (participation === 'N' && currentUserData.participation === 'Y') {
-      const confirm = await Swal.fire({
-        title: 'ยืนยันเปลี่ยนสถานะ',
-        text: 'หากคุณไม่เข้าร่วม คู่จับคู่/คำขอทั้งหมดจะถูกยกเลิก',
-        icon: 'warning',
-        showCancelButton: true
-      });
-      if (!confirm.isConfirmed) return;
-      await callServer('cancelAllPairingAndRequests', profile.userId);
-    }
-    const formData = {
-      participation: participation,
-      travel_go: document.getElementById('edit_travel_go').value,
-      travel_return: document.getElementById('edit_travel_return').value,
-      food_allergy: document.getElementById('edit_food_allergy').value,
-      food_allergy_detail: document.getElementById('edit_allergy_detail')?.value || '',
-      food_preference: document.getElementById('edit_food_preference').value,
-      food_preference_detail: document.getElementById('edit_food_pref_detail')?.value || '',
-      mobile: document.getElementById('edit_mobile').value,
-      additional_info: document.getElementById('edit_additional').value
-    };
-    if (!formData.travel_go || !formData.travel_return || !formData.food_allergy || !formData.food_preference || !formData.mobile) {
-      return Swal.fire('กรุณากรอกข้อมูลให้ครบทุกช่องที่บังคับ');
-    }
-    await callServer('updateRegistration', profile.userId, formData);
-    // รีเฟรชข้อมูล
-    currentUserData = (await callServer('checkRegistration', profile.userId)).data;
-    Swal.fire('บันทึกแล้ว', '', 'success').then(() => showSummaryPage());
-  }
-
-  // ============ หน้าลงทะเบียนใหม่ ============
-  function showRegistrationPage() {
-    document.getElementById('app').innerHTML = `
-      <p style="text-align:center;">ยังไม่พบการลงทะเบียน</p>
-      <div class="form-group">
-        <label>หมายเลขบัตรประชาชน</label>
-        <input type="text" id="citizen_id" placeholder="0-0000-00000-00-0" maxlength="15" inputmode="numeric">
-      </div>
-      <button class="btn" onclick="searchCitizen()">ตรวจสอบ</button>
-    `;
-    const input = document.getElementById('citizen_id');
-    input.addEventListener('input', formatCitizenId);
-  }
-
-  function formatCitizenId(e) {
-    let val = e.target.value.replace(/[^0-9]/g, '');
-    if (val.length > 13) val = val.slice(0,13);
-    let formatted = '';
-    if (val.length > 0) formatted += val[0];
-    if (val.length > 1) formatted += '-' + val.substring(1, Math.min(5, val.length));
-    if (val.length > 5) formatted += '-' + val.substring(5, Math.min(10, val.length));
-    if (val.length > 10) formatted += '-' + val.substring(10, Math.min(12, val.length));
-    if (val.length > 12) formatted += '-' + val[12];
-    e.target.value = formatted;
-  }
-
-  async function searchCitizen() {
-    const rawId = document.getElementById('citizen_id').value.replace(/-/g,'');
-    if (rawId.length !== 13) return Swal.fire('กรุณากรอกเลขบัตรประชาชน 13 หลัก');
-    const result = await callServer('findCitizen', rawId);
-    if (!result.found) {
-      Swal.fire('ไม่พบข้อมูล', 'หมายเลขบัตรประชาชนนี้ไม่มีในฐานข้อมูล', 'error');
-      return;
-    }
-    const person = result.data;
-    // ตรวจสอบและบันทึก LINE UID ถ้ายังไม่มี
-    if (!person.line_uid || person.line_uid.trim() === '') {
-      await callServer('saveLineUID', rawId, profile.userId);
-    }
-    // แสดงข้อมูลเพื่อยืนยัน
-    const confirm = await Swal.fire({
-      title: 'ยืนยันตัวตน',
-      html: `<b>${person.title}${person.name} ${person.surname}</b><br>${person.position}<br>${person.affiliation}`,
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonText: 'ใช่ ฉันเอง',
-      cancelButtonText: 'ไม่ใช่'
-    });
-    if (confirm.isConfirmed) {
-      // ไปหน้าฟอร์มกรอกข้อมูลเพิ่มเติม
-      showAdditionalForm(person);
-    }
-  }
-
-  function showAdditionalForm(person) {
-    document.getElementById('app').innerHTML = `
-      <h3 style="color:#01579B;">ข้อมูลเพิ่มเติม</h3>
-      <div class="form-group">
-        <label>ความประสงค์เข้าร่วมกิจกรรม</label>
-        <select id="participation" required>
-          <option value="">กรุณาเลือก</option>
-          <option value="Y">เข้าร่วม</option>
-          <option value="N">ไม่เข้าร่วม</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>เดินทางไป</label>
-        <select id="travel_go" required>
-          <option value="">กรุณาเลือก</option>
-          <option value="รถส่วนตัว">รถส่วนตัว</option>
-          <option value="รถกรม">รถกรม</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>เดินทางกลับ</label>
-        <select id="travel_return" required>
-          <option value="">กรุณาเลือก</option>
-          <option value="รถส่วนตัว">รถส่วนตัว</option>
-          <option value="รถกรม">รถกรม</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>แพ้อาหาร</label>
-        <select id="food_allergy" required onchange="toggleAllergyDetailReg()">
-          <option value="">กรุณาเลือก</option>
-          <option value="N">ไม่แพ้</option>
-          <option value="Y">แพ้</option>
-        </select>
-        <input type="text" id="allergy_detail" placeholder="ระบุ" style="display:none;">
-      </div>
-      <div class="form-group">
-        <label>ประเภทอาหาร</label>
-        <select id="food_preference" required onchange="toggleFoodPrefDetailReg()">
-          <option value="">กรุณาเลือก</option>
-          <option value="ทานได้ทุกอย่าง">ทานได้ทุกอย่าง</option>
-          <option value="อิสลาม">อิสลาม</option>
-          <option value="มังสวิรัติ">มังสวิรัติ</option>
-          <option value="อื่น ๆ">อื่น ๆ</option>
-        </select>
-        <input type="text" id="food_pref_detail" placeholder="ระบุ" style="display:none;">
-      </div>
-      <div class="form-group">
-        <label>หมายเลขโทรศัพท์มือถือ</label>
-        <input type="tel" id="mobile" required>
-      </div>
-      <div class="form-group">
-        <label>ข้อมูลเพิ่มเติม</label>
-        <textarea id="additional_info"></textarea>
-      </div>
-      <button class="btn" onclick="submitReg('${person.citizen_id}','${person.title}','${person.name}','${person.surname}','${person.position}','${person.affiliation}','${person.single_room}')">ลงทะเบียน</button>
-    `;
-  }
-
-  async function submitReg(citizenId, title, name, surname, position, affiliation, singleRoom) {
-    const p = document.getElementById('participation').value;
-    const tg = document.getElementById('travel_go').value;
-    const tr = document.getElementById('travel_return').value;
-    const fa = document.getElementById('food_allergy').value;
-    const fad = document.getElementById('allergy_detail').value;
-    const fp = document.getElementById('food_preference').value;
-    const fpd = document.getElementById('food_pref_detail').value;
-    const mob = document.getElementById('mobile').value;
-    if (!p || !tg || !tr || !fa || !fp || !mob) {
-      return Swal.fire('กรุณากรอกข้อมูลให้ครบทุกช่องที่บังคับ');
-    }
-    const formData = {
-      line_uid: profile.userId,
-      citizen_id: citizenId,
-      title, name, surname, position, affiliation,
-      single_room: singleRoom,
-      participation: p,
-      travel_go: tg,
-      travel_return: tr,
-      food_allergy: fa,
-      food_allergy_detail: fa === 'Y' ? fad : '',
-      food_preference: fp,
-      food_preference_detail: fp === 'อื่น ๆ' ? fpd : '',
-      mobile: mob,
-      additional_info: document.getElementById('additional_info').value || ''
-    };
-    await callServer('submitRegistration', formData);
-    Swal.fire('ลงทะเบียนสำเร็จ', '', 'success').then(() => {
-      // โหลดหน้ารวมข้อมูลใหม่
-      location.reload();
-    });
-  }
-
-  // ============ การจัดการห้องพัก (จับคู่) ============
-  async function goToPairing() {
-    if (currentUserData.single_room === 'Y') {
-      Swal.fire('สิทธิ์นอนเดี่ยว', 'ท่านมีสิทธิ์ห้องเดี่ยว ไม่ต้องจับคู่', 'info');
-      return;
-    }
-    // แสดงหน้าจับคู่
-    const app = document.getElementById('app');
-    app.innerHTML = `<h3 style="color:#01579B;">จับคู่นอน</h3><div id="pairingArea">กำลังโหลด...</div>`;
-    loadPairingUI();
-    // polling ทุก 10 วินาที
-    setInterval(loadPairingUI, 10000);
-  }
-
-  async function loadPairingUI() {
-    const uid = profile.userId;
-    const candidates = await callServer('getEligibleCandidates', uid);
-    const requests = await callServer('getIncomingRequests', uid);
-    const myPair = await callServer('getMyPairing', uid);
-    let html = '';
-    if (myPair.paired) {
-      html += `<div class="card">คุณมีคู่แล้ว: ${myPair.partnerName} ห้อง: ${myPair.roomNumber || 'ยังไม่ระบุ'}</div>`;
-    } else {
-      // คำขอที่เข้ามา
-      if (requests.length > 0) {
-        html += `<h4>คำขอที่รอตอบรับ</h4>`;
-        requests.forEach(r => {
-          html += `<div class="pair-item">
-            ${r.requesterName}
-            <button class="btn" style="font-size:0.8em; padding:5px 10px;" onclick="acceptReq('${r.requestId}')">ตอบรับ</button>
-            <button class="btn" style="font-size:0.8em; padding:5px 10px; background:#EF5350;" onclick="rejectReq('${r.requestId}')">ปฏิเสธ</button>
-          </div>`;
-        });
+      if (res.found) {
+        userInfo = res.data;
+        userInfo.idCard = idStr;
+        document.getElementById('profileDisplay').innerText = `${userInfo.title}${userInfo.fname} ${userInfo.lname}`;
+        document.getElementById('deptDisplay').innerText = `ตำแหน่ง: ${userInfo.position} | สังกัด: ${userInfo.dept}`;
+        showStep('step-register');
+      } else {
+        Swal.fire('ไม่พบข้อมูล', 'กรุณาตรวจสอบหมายเลขบัตรประชาชนอีกครั้ง', 'error');
       }
-      // ช่องค้นหาผู้ร่วมสัมมนา
-      html += `<h4>ค้นหาผู้ที่ต้องการจับคู่</h4>
-      <input type="text" id="searchPair" placeholder="พิมพ์ชื่อเพื่อค้นหา..." oninput="filterCandidates()">
-      <div id="candidateList">`;
-      candidates.forEach(c => {
-        html += `<div class="pair-item candidate" data-uid="${c.uid}" data-name="${c.fullName}" onclick="sendRequest('${c.uid}')">${c.fullName} (${c.affiliation})</div>`;
-      });
-      html += `</div><p style="font-size:0.8em; color:gray;">หากไม่พบบุคคลที่ค้นหา อาจยังไม่ลงทะเบียน ไม่เข้าร่วม หรือมีคู่แล้ว</p>`;
     }
-    document.getElementById('pairingArea').innerHTML = html;
-  }
 
-  function filterCandidates() {
-    const term = document.getElementById('searchPair').value.toLowerCase();
-    document.querySelectorAll('.candidate').forEach(el => {
-      el.style.display = el.dataset.name.toLowerCase().includes(term) ? '' : 'none';
-    });
-  }
-
-  async function sendRequest(targetUID) {
-    const confirm = await Swal.fire({
-      title: 'ส่งคำขอจับคู่?',
-      text: 'ผู้ใช้จะได้รับการแจ้งเตือน',
-      showCancelButton: true
-    });
-    if (confirm.isConfirmed) {
-      await callServer('sendPairRequest', profile.userId, targetUID);
-      Swal.fire('ส่งคำขอแล้ว', '', 'success');
-      loadPairingUI();
-    }
-  }
-
-  async function acceptReq(reqId) {
-    await callServer('acceptRequest', reqId, profile.userId);
-    Swal.fire('จับคู่สำเร็จ', '', 'success');
-    loadPairingUI();
-  }
-
-  async function rejectReq(reqId) {
-    await callServer('rejectRequest', reqId);
-    Swal.fire('ปฏิเสธคำขอ', '', 'info');
-    loadPairingUI();
-  }
-
-  // ============ แอดมิน (เรียกผ่าน URL param ?admin) ============
-  // อยู่นอก scope หลัก แต่เพื่อความสมบูรณ์ให้แทรกโค้ดแอดมิน
-  // ตรวจสอบ URL
-  if (window.location.search.includes('admin')) {
-    Swal.fire({
-      title: 'รหัสผ่านแอดมิน',
-      input: 'password',
-      inputAttributes: { autocapitalize: 'off' }
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        const role = await callServer('verifyAdminPassword', result.value);
-        if (role === 'invalid') {
-          Swal.fire('รหัสผิด', '', 'error');
-          return;
+    async function submitRegister() {
+        // ตรวจสอบ required ฟิลด์ด้วย HTML5 validation ก่อน
+        if(!document.getElementById('regForm').checkValidity()) {
+            document.getElementById('regForm').reportValidity();
+            return;
         }
-        // แสดงหน้าแอดมินตาม role
-        showAdminPanel(role, result.value);
-      }
-    });
-  }
 
-  function showAdminPanel(role, password) {
-    document.getElementById('app').innerHTML = `
-      <h3>แดชบอร์ดผู้ดูแล</h3>
-      <div id="adminTabs">
-        <button onclick="loadAdminDashboard('${password}')">ภาพรวม</button>
-        <button onclick="loadUnregistered('${password}')">ยังไม่ลงทะเบียน</button>
-        <button onclick="loadPairingAdmin('${password}','${role}')">จัดการห้องพัก</button>
-      </div>
-      <div id="adminContent"></div>
-    `;
-  }
-  // ฟังก์ชัน admin อื่น ๆ ...
-</script>
+        const data = {
+            ...userInfo,
+            join: document.getElementById('joinStatus').value,
+            transport: document.getElementById('transport').value,
+            phone: document.getElementById('phone').value,
+            // เก็บข้อมูลให้ครบตาม input
+        };
+
+        Swal.showLoading();
+        const res = await callAPI('registerUser', { data: data });
+        if(res.status === 'success') {
+            Swal.fire('สำเร็จ', 'บันทึกข้อมูลเรียบร้อย', 'success').then(() => {
+                if (userInfo.singleRoom === 'N') {
+                    showStep('step-pairing');
+                } else {
+                    liff.closeWindow();
+                }
+            });
+        } else {
+            Swal.fire('ข้อผิดพลาด', res.message, 'error'); // กรณีหมดเวลาลงทะเบียน
+        }
+    }
+
+    function showStep(stepId) {
+      ['step-idcard', 'step-register', 'step-pairing'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+      });
+      document.getElementById(stepId).classList.remove('hidden');
+    }
+
+    // ==========================================
+    // PAIRING LOGIC (จำลองโครงสร้าง)
+    // ==========================================
+    async function searchPartner() {
+        // ค้นหาและดึงข้อมูลจาก GAS มาแสดง
+        // เมื่อกด "ส่งคำขอ" จะเรียก callAPI('sendPairRequest', { toUid: 'xxx' })
+    }
+
+    async function fetchRequests() {
+        // ดึงข้อมูลคำขอที่ส่งมาหาเราแบบ Real-time (Polling)
+        // เพื่อมาสร้างปุ่ม "ยอมรับ" (Match) หรือ "ปฏิเสธ"
+    }
+
+  </script>
 </body>
 </html>
